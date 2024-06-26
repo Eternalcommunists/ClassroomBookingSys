@@ -1,5 +1,5 @@
 //
-// Created by å´åŸ¹æµ© on 24-6-26.
+// Created by ÎâÅàºÆ on 24-6-26.
 //
 
 #ifndef UNTITLED1_TEACHER_H
@@ -8,60 +8,104 @@
 #endif //UNTITLED1_TEACHER_H
 #include <iostream>
 #include <mysql.h>
+#include <limits>
+#include <conio.h>
 #include "Room.h"
 
 using namespace std;
+bool isValidDay(int year, int month, int day) {
+    if (month == 2) {
+        // ÈòÄêÅĞ¶Ï
+        bool leap = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+        return day <= (leap ? 29 : 28);
+    }
 
-MYSQL mysql;
-MYSQL_RES *res;//è¿™ä¸ªç»“æ„ä»£è¡¨è¿”å›è¡Œçš„ä¸€ä¸ªæŸ¥è¯¢ç»“æœé›†
-MYSQL_ROW column;//ä¸€ä¸ªè¡Œæ•°æ®çš„ç±»å‹å®‰å…¨(type-safe)çš„è¡¨ç¤º
+    static const int daysInMonth[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+    return day <= daysInMonth[month - 1];
+}
+
+bool isDateInRange(const std::string& date) {
+    int year, month, day;
+    sscanf(date.c_str(), "%d-%d-%d", &year, &month, &day);
+
+    // ÀıÈç£¬¼ì²éÄê·İ·¶Î§ÔÚ 1900 µ½ 2100 ÄêÖ®¼ä
+    if (year < 1900 || year > 2100) return false;
+
+    // ¼ì²éÔÂ·İºÍÈÕÆÚ
+    if (month < 1 || month > 12) return false;
+
+    if (day < 1 || day > 31) return false; // ¼òµ¥Ê¾Àı£¬Êµ¼Ê¼ì²éÊ±Ó¦¿¼ÂÇÔÂ·İºÍÈòÄêÇé¿ö
+
+    return true;
+}
+bool isValidDate(const std::string& date) {
+    int year, month, day;
+    sscanf(date.c_str(), "%d-%d-%d", &year, &month, &day);
+
+    if (year < 1900 || year > 2100) return false;
+    if (month < 1 || month > 12) return false;
+
+    return isValidDay(year, month, day);
+}
+
+//Ò»¸öĞĞÊı¾İµÄÀàĞÍ°²È«(type-safe)µÄ±íÊ¾
 class Teacher {
 protected:
     int TeacherID;
-    int TeacherNumber; // æ•™å¸ˆå·¥å·
-    string TeacherName; // æ•™å¸ˆå§“å
-    int PermissionLevel; // æƒé™ç­‰çº§
-    string PhoneNumber; // ç”µè¯å·ç 
-    string OfficeName; // åŠå…¬å®¤åç§°
+    int TeacherNumber; // ½ÌÊ¦¹¤ºÅ
+    string TeacherName; // ½ÌÊ¦ĞÕÃû
+    int PermissionLevel; // È¨ÏŞµÈ¼¶
+    string PhoneNumber; // µç»°ºÅÂë
+    string OfficeName;
+public:
+    int getTeacherId() const;
+    int getTeacherNumber() const;
+    const string &getTeacherName() const;
+    int getPermissionLevel() const;
+    const string &getPhoneNumber() const;
+    const string &getOfficeName() const;
+    // °ì¹«ÊÒÃû³Æ
 private:
-    string Password;//ä¿®æ­£ï¼šå´åŸ¹æµ© æ—¶é—´ï¼š2024.6.26 00ç‚¹54åˆ†
+    string Password;//ĞŞÕı£ºÎâÅàºÆ Ê±¼ä£º2024.6.26 00µã54·Ö
     // other attributes
 public:
-    // æ„é€ å‡½æ•°ã€ææ„å‡½æ•°ã€getterã€setterç­‰
-    virtual void display() const = 0; // çº¯è™šå‡½æ•°ï¼Œå¼ºåˆ¶å­ç±»å®ç°
-    virtual void saveToFile(ofstream& file) const = 0; // è™šå‡½æ•°
-    virtual void loadFromFile(ifstream& file) = 0; // è™šå‡½æ•°
-    // è™šæ‹Ÿææ„å‡½æ•°ï¼Œç¡®ä¿æ´¾ç”Ÿç±»å¯¹è±¡è¢«æ­£ç¡®é”€æ¯
+    // ¹¹Ôìº¯Êı¡¢Îö¹¹º¯Êı¡¢getter¡¢setterµÈ
+    virtual void display() const = 0; // ´¿Ğéº¯Êı£¬Ç¿ÖÆ×ÓÀàÊµÏÖ
+//    virtual void saveToFile(ofstream& file) const = 0; // Ğéº¯Êı
+//    virtual void loadFromFile(ifstream& file) = 0; // Ğéº¯Êı
+    // ĞéÄâÎö¹¹º¯Êı£¬È·±£ÅÉÉúÀà¶ÔÏó±»ÕıÈ·Ïú»Ù
     virtual ~Teacher() = default;
     void setTeacherNumber(int number) { TeacherNumber = number; }
     void setTeacherName(const string& name) { TeacherName = name; }
     void setPermissionLevel(int level) { PermissionLevel = level; }
     void setPhoneNumber(const string& number) { PhoneNumber = number; }
     void setOfficeName(const string& name) { OfficeName = name; }
-    void setpassword(const string&pass){Password=pass;}//ä¿®æ­£ï¼šå´åŸ¹æµ© æ—¶é—´ï¼š2024.6.26 00ç‚¹54åˆ†
+    void setpassword(const string&pass){Password=pass;}//ĞŞÕı£ºÎâÅàºÆ Ê±¼ä£º2024.6.26 00µã54·Ö
     bool teacher_enter();
-
     void ViewAvailableRooms();
-
     void ViewBookings();
-
     bool CancelBooking(int bookingID);
+    static bool ModifyBooking(int bookingID, int roomID, const string &bookingDate);
+    void OptionChoice();
+    void getDateFromTeacher(string &bookingDate);
+    bool isDateAvailable(int roomID, const string &bookingDate);
+    bool BookRoom(int roomID, const string &bookingDate);
 
-    bool ModifyBooking(int bookingID, int roomID, const string &bookingDate);
+    void Loginshow();
 };
 class NormalTeacher : public Teacher {
 public:
-    // æ„é€ å‡½æ•°ã€ææ„å‡½æ•°ã€getterã€setterç­‰
-    void display() const override; // è¦†ç›–çˆ¶ç±»çš„çº¯è™šå‡½æ•°
-    void saveToFile(ofstream& file) const override; // è¦†ç›–çˆ¶ç±»çš„è™šå‡½æ•°
-    void loadFromFile(ifstream& file) override; // è¦†ç›–çˆ¶ç±»çš„è™šå‡½æ•°
-    // å‹å…ƒå‡½æ•°å£°æ˜
+    // ¹¹Ôìº¯Êı¡¢Îö¹¹º¯Êı¡¢getter¡¢setterµÈ
+    void display() const override; // ¸²¸Ç¸¸ÀàµÄ´¿Ğéº¯Êı
+//    void saveToFile(ofstream& file) const override; // ¸²¸Ç¸¸ÀàµÄĞéº¯Êı
+//    void loadFromFile(ifstream& file) override; // ¸²¸Ç¸¸ÀàµÄĞéº¯Êı
+    // ÓÑÔªº¯ÊıÉùÃ÷
     friend ostream& operator<<(ostream& os, const NormalTeacher& teacher);
     friend istream& operator>>(istream& is, NormalTeacher& teacher);
 
     void teacher_register();
 };
-// displayå‡½æ•°çš„å®ç°
+// displayº¯ÊıµÄÊµÏÖ
 void NormalTeacher::display() const {
     cout << "Teacher Number: " << TeacherNumber << endl;
     cout << "Teacher Name: " << TeacherName << endl;
@@ -69,62 +113,34 @@ void NormalTeacher::display() const {
     cout << "Phone Number: " << PhoneNumber << endl;
     cout << "Office Name: " << OfficeName << endl;
 }
-// saveToFileå‡½æ•°çš„å®ç°
-void NormalTeacher::saveToFile(ofstream& file) const {
-    if (!file) {
-        cerr << "Error: File could not be opened for writing!ByTeacher" << endl;
-        return;
-    }
-    file << TeacherNumber << endl;
-    file << TeacherName << endl;
-    file << PermissionLevel << endl;
-    file << PhoneNumber << endl;
-    file << OfficeName << endl;
-}
+
 std::string getInput(const std::string& prompt) {
     std::string input;
     std::cout << prompt;
     std::getline(std::cin, input);
     return input;
 }
-// è·å–å¯†ç çš„è¾…åŠ©å‡½æ•°
+// »ñÈ¡ÃÜÂëµÄ¸¨Öúº¯Êı
 std::string getPassword() {
     std::string password;
     std::cout << "Enter password: ";
     char ch;
-    while ((ch = _getch()) != '\r') { // ä½¿ç”¨ _getch() æ— å›æ˜¾è¾“å…¥
-        if (ch == '\b') { // å¤„ç†é€€æ ¼
+    while ((ch = _getch()) != '\r') { // Ê¹ÓÃ _getch() ÎŞ»ØÏÔÊäÈë
+        if (ch == '\b') { // ´¦ÀíÍË¸ñ
             if (!password.empty()) {
                 password.pop_back();
-                std::cout << "\b \b"; // å…‰æ ‡å‰ç§»ä¸€ä½å¹¶åˆ é™¤æ˜¾ç¤ºçš„æ˜Ÿå·
+                std::cout << "\b \b"; // ¹â±êÇ°ÒÆÒ»Î»²¢É¾³ıÏÔÊ¾µÄĞÇºÅ
             }
         } else {
             password += ch;
-            std::cout << '*'; // æ˜¾ç¤ºæ˜Ÿå·
+            std::cout << '*'; // ÏÔÊ¾ĞÇºÅ
         }
     }
     std::cout << std::endl;
     return password;
 }
-// loadFromFileå‡½æ•°çš„å®ç°
-void NormalTeacher::loadFromFile(ifstream& file) {
-    if (!file) {
-        cerr << "Error: File could not be opened for reading!By NormalTeacher" << endl;
-        return;
-    }
-    file >> TeacherNumber;
-    file.ignore(numeric_limits<streamsize>::max(), '\n'); // å¿½ç•¥è¡Œå°¾æ¢è¡Œç¬¦
-    getline(file, TeacherName);
-    file >> PermissionLevel;
-    file.ignore(numeric_limits<streamsize>::max(), '\n'); // å¿½ç•¥è¡Œå°¾æ¢è¡Œç¬¦
-    getline(file, PhoneNumber);
-    getline(file, OfficeName);
 
-    if (!file) {
-        cerr << "Error: Failed to read from file!" << endl;
-    }
-}
-// operator<<å‡½æ•°çš„å®ç°
+// operator<<º¯ÊıµÄÊµÏÖ
 ostream& operator<<(ostream& os, const NormalTeacher& teacher) {
     os << "Teacher Number: " << teacher.TeacherNumber << endl;
     os << "Teacher Name: " << teacher.TeacherName << endl;
@@ -133,25 +149,25 @@ ostream& operator<<(ostream& os, const NormalTeacher& teacher) {
     os << "Office Name: " << teacher.OfficeName << endl;
     return os;
 }
-// operator>>å‡½æ•°çš„å®ç°
+// operator>>º¯ÊıµÄÊµÏÖ
 istream& operator>>(istream& is, NormalTeacher& teacher) {
     cout << "Enter Teacher Number: ";
     is >> teacher.TeacherNumber;
-    is.ignore(); // å¿½ç•¥æ¢è¡Œç¬¦
+    is.ignore(); // ºöÂÔ»»ĞĞ·û
     cout << "Enter Teacher Name: ";
     getline(is, teacher.TeacherName);
     cout << "Enter Permission Level: ";
     is >> teacher.PermissionLevel;
-    is.ignore(); // å¿½ç•¥æ¢è¡Œç¬¦
+    is.ignore(); // ºöÂÔ»»ĞĞ·û
     cout << "Enter Phone Number: ";
     getline(is, teacher.PhoneNumber);
     cout << "Enter Office Name: ";
     getline(is, teacher.OfficeName);
     return is;
 }
-// æ³¨å†Œæ•™å¸ˆå‡½æ•°çš„å®ç°
+// ×¢²á½ÌÊ¦º¯ÊıµÄÊµÏÖ
 void NormalTeacher::teacher_register() {
-    // è·å–ç”¨æˆ·è¾“å…¥çš„è¯¦ç»†ä¿¡æ¯
+    // »ñÈ¡ÓÃ»§ÊäÈëµÄÏêÏ¸ĞÅÏ¢
     int teacherNumber = std::stoi(getInput("Enter Teacher Number: "));
     std::string teacherName = getInput("Enter Teacher Name: ");
     int permissionLevel = std::stoi(getInput("Enter Permission Level (e.g., 1 for Normal Teacher): "));
@@ -159,14 +175,14 @@ void NormalTeacher::teacher_register() {
     std::string officeName = getInput("Enter Office Name: ");
     std::string password = getPassword();
 
-    // è¿æ¥æ•°æ®åº“
+    // Á¬½ÓÊı¾İ¿â
     mysql_init(&mysql);
     if (!mysql_real_connect(&mysql, "localhost", "root", "admin", "school", 3306, NULL, 0)) {
         std::cout << "Error connecting to database: " << mysql_error(&mysql) << std::endl;
         return;
     }
 
-    // æ„é€ æ’å…¥ SQL è¯­å¥
+    // ¹¹Ôì²åÈë SQL Óï¾ä
     std::string query = "INSERT INTO Teacher (TeacherNumber, TeacherName, PermissionLevel, PhoneNumber, OfficeName, Password) VALUES ("
                         + std::to_string(teacherNumber) + ", '"
                         + teacherName + "', "
@@ -175,7 +191,7 @@ void NormalTeacher::teacher_register() {
                         + officeName + "', '"
                         + password + "')";
 
-    // æ‰§è¡Œ SQL è¯­å¥
+    // Ö´ĞĞ SQL Óï¾ä
     if (mysql_query(&mysql, query.c_str())) {
         std::cout << "Error inserting teacher: " << mysql_error(&mysql) << std::endl;
         mysql_close(&mysql);
@@ -184,22 +200,22 @@ void NormalTeacher::teacher_register() {
 
     std::cout << "Teacher registered successfully." << std::endl;
 
-    // å…³é—­æ•°æ®åº“è¿æ¥
+    // ¹Ø±ÕÊı¾İ¿âÁ¬½Ó
     mysql_close(&mysql);
 }
 
 
 
-// å®šä¹‰ç³»ç»Ÿç®¡ç†å‘˜ç±»
+// ¶¨ÒåÏµÍ³¹ÜÀíÔ±Àà
 class Admin : public Teacher {
     // other attributes
 public:
-    // æ„é€ å‡½æ•°ã€ææ„å‡½æ•°ã€getterã€setterç­‰
-    void display() const override; // è¦†ç›–çˆ¶ç±»çš„çº¯è™šå‡½æ•°
-    void saveToFile(ofstream& file) const override; // è¦†ç›–çˆ¶ç±»çš„è™šå‡½æ•°
-    void loadFromFile(ifstream& file) override; // è¦†ç›–çˆ¶ç±»çš„è™šå‡½æ•°
+    // ¹¹Ôìº¯Êı¡¢Îö¹¹º¯Êı¡¢getter¡¢setterµÈ
+    void display() const override; // ¸²¸Ç¸¸ÀàµÄ´¿Ğéº¯Êı
+//    void saveToFile(ofstream& file) const override; // ¸²¸Ç¸¸ÀàµÄĞéº¯Êı
+//    void loadFromFile(ifstream& file) override; // ¸²¸Ç¸¸ÀàµÄĞéº¯Êı
 
-    // å‹å…ƒå‡½æ•°å£°æ˜
+    // ÓÑÔªº¯ÊıÉùÃ÷
     friend ostream& operator<<(ostream& os, const Admin& admin);
     friend istream& operator>>(istream& is, Admin& admin);
 
@@ -213,7 +229,7 @@ public:
 
     bool CancelBooking(int bookingID);
 };
-// displayå‡½æ•°çš„å®ç°
+// displayº¯ÊıµÄÊµÏÖ
 void Admin::display() const {
     cout << "Admin Number: " << TeacherNumber << endl;
     cout << "Admin Name: " << TeacherName << endl;
@@ -221,36 +237,9 @@ void Admin::display() const {
     cout << "Phone Number: " << PhoneNumber << endl;
     cout << "Office Name: " << OfficeName << endl;
 }
-// saveToFileå‡½æ•°çš„å®ç°
-void Admin::saveToFile(ofstream& file) const {
-    if (!file) {
-        cerr << "Error: File could not be opened for writing!FROM ADMIN" << endl;
-        return;
-    }
-    file << TeacherNumber << endl;
-    file << TeacherName << endl;
-    file << PermissionLevel << endl;
-    file << PhoneNumber << endl;
-    file << OfficeName << endl;
-}
-// loadFromFileå‡½æ•°çš„å®ç°
-void Admin::loadFromFile(ifstream& file) {
-    if (!file) {
-        cerr << "Error: File could not be opened for reading!By Admin" << endl;
-        return;
-    }
-    file >> TeacherNumber;
-    file.ignore(numeric_limits<streamsize>::max(), '\n'); // å¿½ç•¥è¡Œå°¾æ¢è¡Œç¬¦
-    getline(file, TeacherName);
-    file >> PermissionLevel;
-    file.ignore(numeric_limits<streamsize>::max(), '\n'); // å¿½ç•¥è¡Œå°¾æ¢è¡Œç¬¦
-    getline(file, PhoneNumber);
-    getline(file, OfficeName);
-    if (!file) {
-        cerr << "Error: Failed to read from file!" << endl;
-    }
-}
-// operator<<å‡½æ•°çš„å®ç°
+
+
+// operator<<º¯ÊıµÄÊµÏÖ
 ostream& operator<<(ostream& os, const Admin& admin) {
     os << "Admin Number: " << admin.TeacherNumber << endl;
     os << "Admin Name: " << admin.TeacherName << endl;
@@ -259,16 +248,16 @@ ostream& operator<<(ostream& os, const Admin& admin) {
     os << "Office Name: " << admin.OfficeName << endl;
     return os;
 }
-// operator>>å‡½æ•°çš„å®ç°
+// operator>>º¯ÊıµÄÊµÏÖ
 istream& operator>>(istream& is, Admin& admin) {
     cout << "Enter Admin Number: ";
     is >> admin.TeacherNumber;
-    is.ignore(); // å¿½ç•¥æ¢è¡Œç¬¦
+    is.ignore(); // ºöÂÔ»»ĞĞ·û
     cout << "Enter Admin Name: ";
     getline(is, admin.TeacherName);
     cout << "Enter Permission Level: ";
     is >> admin.PermissionLevel;
-    is.ignore(); // å¿½ç•¥æ¢è¡Œç¬¦
+    is.ignore(); // ºöÂÔ»»ĞĞ·û
     cout << "Enter Phone Number: ";
     getline(is, admin.PhoneNumber);
     cout << "Enter Office Name: ";
@@ -279,185 +268,188 @@ istream& operator>>(istream& is, Admin& admin) {
 void Admin::admin_enter() {
 
 }
-/**ç¼–è¾‘æ—¶é—´:24-6-26 ä¸Šåˆ1:23
-*åˆ›å»ºäººï¼šå´åŸ¹æµ©
+/**±à¼­Ê±¼ä:24-6-26 ÉÏÎç1:23
+*´´½¨ÈË£ºÎâÅàºÆ
 */
 bool CheckLogin(int teacherNumber, const std::string& password) {
-    // åˆå§‹åŒ– MySQL è¿æ¥å¥æŸ„
+    // ³õÊ¼»¯ MySQL Á¬½Ó¾ä±ú
     MYSQL* mysql = mysql_init(NULL);
 
-    // å°è¯•è¿æ¥åˆ° MySQL æ•°æ®åº“
+    // ³¢ÊÔÁ¬½Óµ½ MySQL Êı¾İ¿â
     if (!mysql_real_connect(mysql, "localhost", "root", "admin", "school", 3306, NULL, 0)) {
-        // å¦‚æœè¿æ¥å¤±è´¥ï¼Œæ‰“å°é”™è¯¯ä¿¡æ¯å¹¶è¿”å› false
+        // Èç¹ûÁ¬½ÓÊ§°Ü£¬´òÓ¡´íÎóĞÅÏ¢²¢·µ»Ø false
         std::cout << "Connection error: " << mysql_error(mysql) << std::endl;
         return false;
     }
 
-    // åˆ›å»ºé¢„å¤„ç†è¯­å¥å¥æŸ„
+    // ´´½¨Ô¤´¦ÀíÓï¾ä¾ä±ú
     MYSQL_STMT* stmt = mysql_stmt_init(mysql);
-    // SQL æŸ¥è¯¢è¯­å¥ï¼Œä½¿ç”¨ ? å ä½ç¬¦ä»£æ›¿å®é™…å‚æ•°
+    // SQL ²éÑ¯Óï¾ä£¬Ê¹ÓÃ ? Õ¼Î»·û´úÌæÊµ¼Ê²ÎÊı
     const char* query = "SELECT * FROM teacher WHERE TeacherNumber=? AND Password=?";
 
-    // å‡†å¤‡ SQL è¯­å¥
+    // ×¼±¸ SQL Óï¾ä
     if (mysql_stmt_prepare(stmt, query, strlen(query))) {
-        // å¦‚æœå‡†å¤‡å¤±è´¥ï¼Œæ‰“å°é”™è¯¯ä¿¡æ¯å¹¶å…³é—­è¯­å¥å¥æŸ„å’Œ MySQL è¿æ¥
+        // Èç¹û×¼±¸Ê§°Ü£¬´òÓ¡´íÎóĞÅÏ¢²¢¹Ø±ÕÓï¾ä¾ä±úºÍ MySQL Á¬½Ó
         std::cout << "Statement preparation error: " << mysql_stmt_error(stmt) << std::endl;
         mysql_stmt_close(stmt);
         mysql_close(mysql);
         return false;
     }
 
-    // å®šä¹‰ç»‘å®šå‚æ•°æ•°ç»„ï¼Œä¸¤ä¸ªå‚æ•°ï¼šTeacherNumber å’Œ Password
+    // ¶¨Òå°ó¶¨²ÎÊıÊı×é£¬Á½¸ö²ÎÊı£ºTeacherNumber ºÍ Password
     MYSQL_BIND bind[2];
-    memset(bind, 0, sizeof(bind));  // åˆå§‹åŒ–ç»‘å®šå‚æ•°æ•°ç»„
+    memset(bind, 0, sizeof(bind));  // ³õÊ¼»¯°ó¶¨²ÎÊıÊı×é
 
-    // ç»‘å®š TeacherNumber å‚æ•°
-    bind[0].buffer_type = MYSQL_TYPE_LONG;  // å‚æ•°ç±»å‹ä¸ºæ•´æ•°
-    bind[0].buffer = (char*)&teacherNumber; // æŒ‡å‘ TeacherNumber çš„æŒ‡é’ˆ
-    bind[0].is_null = 0;                    // ä¸ä¸ºç©º
-    bind[0].length = 0;                     // é•¿åº¦è®¾ç½®ä¸º 0
+    // °ó¶¨ TeacherNumber ²ÎÊı
+    bind[0].buffer_type = MYSQL_TYPE_LONG;  // ²ÎÊıÀàĞÍÎªÕûÊı
+    bind[0].buffer = (char*)&teacherNumber; // Ö¸Ïò TeacherNumber µÄÖ¸Õë
+    bind[0].is_null = 0;                    // ²»Îª¿Õ
+    bind[0].length = 0;                     // ³¤¶ÈÉèÖÃÎª 0
 
-    // ç»‘å®š Password å‚æ•°
-    bind[1].buffer_type = MYSQL_TYPE_STRING;     // å‚æ•°ç±»å‹ä¸ºå­—ç¬¦ä¸²
-    bind[1].buffer = (char*)password.c_str();    // æŒ‡å‘å¯†ç å­—ç¬¦ä¸²
-    bind[1].buffer_length = password.length();   // è®¾ç½®å­—ç¬¦ä¸²é•¿åº¦
-    bind[1].is_null = 0;                         // ä¸ä¸ºç©º
-    bind[1].length = 0;                          // é•¿åº¦è®¾ç½®ä¸º 0
+    // °ó¶¨ Password ²ÎÊı
+    bind[1].buffer_type = MYSQL_TYPE_STRING;     // ²ÎÊıÀàĞÍÎª×Ö·û´®
+    bind[1].buffer = (char*)password.c_str();    // Ö¸ÏòÃÜÂë×Ö·û´®
+    bind[1].buffer_length = password.length();   // ÉèÖÃ×Ö·û´®³¤¶È
+    bind[1].is_null = 0;                         // ²»Îª¿Õ
+    bind[1].length = 0;                          // ³¤¶ÈÉèÖÃÎª 0
 
-    // ç»‘å®šå‚æ•°åˆ°é¢„å¤„ç†è¯­å¥
+    // °ó¶¨²ÎÊıµ½Ô¤´¦ÀíÓï¾ä
     if (mysql_stmt_bind_param(stmt, bind)) {
-        // å¦‚æœç»‘å®šå¤±è´¥ï¼Œæ‰“å°é”™è¯¯ä¿¡æ¯å¹¶å…³é—­è¯­å¥å¥æŸ„å’Œ MySQL è¿æ¥
+        // Èç¹û°ó¶¨Ê§°Ü£¬´òÓ¡´íÎóĞÅÏ¢²¢¹Ø±ÕÓï¾ä¾ä±úºÍ MySQL Á¬½Ó
         std::cout << "Parameter binding error: " << mysql_stmt_error(stmt) << std::endl;
         mysql_stmt_close(stmt);
         mysql_close(mysql);
         return false;
     }
 
-    // æ‰§è¡Œé¢„å¤„ç†è¯­å¥
+    // Ö´ĞĞÔ¤´¦ÀíÓï¾ä
     if (mysql_stmt_execute(stmt)) {
-        // å¦‚æœæ‰§è¡Œå¤±è´¥ï¼Œæ‰“å°é”™è¯¯ä¿¡æ¯å¹¶å…³é—­è¯­å¥å¥æŸ„å’Œ MySQL è¿æ¥
+        // Èç¹ûÖ´ĞĞÊ§°Ü£¬´òÓ¡´íÎóĞÅÏ¢²¢¹Ø±ÕÓï¾ä¾ä±úºÍ MySQL Á¬½Ó
         std::cout << "Statement execution error: " << mysql_stmt_error(stmt) << std::endl;
         mysql_stmt_close(stmt);
         mysql_close(mysql);
         return false;
     }
 
-    // è·å–æŸ¥è¯¢ç»“æœçš„å…ƒæ•°æ®ï¼ˆæè¿°ç»“æœçš„ç»“æ„ï¼‰
+    // »ñÈ¡²éÑ¯½á¹ûµÄÔªÊı¾İ£¨ÃèÊö½á¹ûµÄ½á¹¹£©
     MYSQL_RES* res = mysql_stmt_result_metadata(stmt);
-    int num_fields = mysql_num_fields(res);  // è·å–ç»“æœä¸­çš„å­—æ®µæ•°
-    // å®šä¹‰ç»‘å®šç»“æœæ•°ç»„ï¼Œåˆå§‹åŒ–ä¸º 0
+    int num_fields = mysql_num_fields(res);  // »ñÈ¡½á¹ûÖĞµÄ×Ö¶ÎÊı
+    // ¶¨Òå°ó¶¨½á¹ûÊı×é£¬³õÊ¼»¯Îª 0
     MYSQL_BIND result_bind[num_fields];
     memset(result_bind, 0, sizeof(result_bind));
 
-    // å®šä¹‰ä¸€ä¸ªå­—ç¬¦ç¼“å†²åŒºï¼Œç”¨äºå­˜å‚¨æŸ¥è¯¢ç»“æœ
+    // ¶¨ÒåÒ»¸ö×Ö·û»º³åÇø£¬ÓÃÓÚ´æ´¢²éÑ¯½á¹û
     char buffer[256];
     for (int i = 0; i < num_fields; ++i) {
-        // è®¾ç½®æ¯ä¸ªå­—æ®µçš„ç¼“å†²åŒºä¿¡æ¯
-        result_bind[i].buffer_type = MYSQL_TYPE_STRING;  // å­—æ®µç±»å‹ä¸ºå­—ç¬¦ä¸²
-        result_bind[i].buffer = buffer;                  // æŒ‡å‘ç¼“å†²åŒº
-        result_bind[i].buffer_length = sizeof(buffer);   // ç¼“å†²åŒºå¤§å°
-        result_bind[i].is_null = 0;                      // ä¸ä¸ºç©º
-        result_bind[i].length = 0;                       // é•¿åº¦è®¾ç½®ä¸º 0
+        // ÉèÖÃÃ¿¸ö×Ö¶ÎµÄ»º³åÇøĞÅÏ¢
+        result_bind[i].buffer_type = MYSQL_TYPE_STRING;  // ×Ö¶ÎÀàĞÍÎª×Ö·û´®
+        result_bind[i].buffer = buffer;                  // Ö¸Ïò»º³åÇø
+        result_bind[i].buffer_length = sizeof(buffer);   // »º³åÇø´óĞ¡
+        result_bind[i].is_null = 0;                      // ²»Îª¿Õ
+        result_bind[i].length = 0;                       // ³¤¶ÈÉèÖÃÎª 0
     }
 
-    // ç»‘å®šç»“æœç¼“å†²åŒºåˆ°é¢„å¤„ç†è¯­å¥
+    // °ó¶¨½á¹û»º³åÇøµ½Ô¤´¦ÀíÓï¾ä
     if (mysql_stmt_bind_result(stmt, result_bind)) {
-        // å¦‚æœç»‘å®šå¤±è´¥ï¼Œæ‰“å°é”™è¯¯ä¿¡æ¯å¹¶å…³é—­è¯­å¥å¥æŸ„å’Œ MySQL è¿æ¥
+        // Èç¹û°ó¶¨Ê§°Ü£¬´òÓ¡´íÎóĞÅÏ¢²¢¹Ø±ÕÓï¾ä¾ä±úºÍ MySQL Á¬½Ó
         std::cout << "Result binding error: " << mysql_stmt_error(stmt) << std::endl;
         mysql_stmt_close(stmt);
         mysql_close(mysql);
         return false;
     }
 
-    // å°†æŸ¥è¯¢ç»“æœå­˜å‚¨åœ¨æœåŠ¡å™¨ä¸Š
+    // ½«²éÑ¯½á¹û´æ´¢ÔÚ·şÎñÆ÷ÉÏ
     mysql_stmt_store_result(stmt);
-    // æ£€æŸ¥æ˜¯å¦æœ‰æŸ¥è¯¢ç»“æœï¼ˆæ˜¯å¦æœ‰åŒ¹é…çš„è®°å½•ï¼‰
+    // ¼ì²éÊÇ·ñÓĞ²éÑ¯½á¹û£¨ÊÇ·ñÓĞÆ¥ÅäµÄ¼ÇÂ¼£©
     bool login_successful = (mysql_stmt_num_rows(stmt) > 0);
 
-    // é‡Šæ”¾ç»“æœé›†
+    // ÊÍ·Å½á¹û¼¯
     mysql_free_result(res);
-    // å…³é—­é¢„å¤„ç†è¯­å¥
+    // ¹Ø±ÕÔ¤´¦ÀíÓï¾ä
     mysql_stmt_close(stmt);
-    // å…³é—­ MySQL è¿æ¥
+    // ¹Ø±Õ MySQL Á¬½Ó
     mysql_close(mysql);
 
-    return login_successful;  // è¿”å›ç™»å½•æ˜¯å¦æˆåŠŸ
+    return login_successful;  // ·µ»ØµÇÂ¼ÊÇ·ñ³É¹¦
 }
 
-bool Teacher:: teacher_enter() {
-    //read_all_the_teachers(); //è¯»å–ç”¨æˆ·åˆ—è¡¨
+bool Teacher:: teacher_enter(){
+    //read_all_the_teachers(); //¶ÁÈ¡ÓÃ»§ÁĞ±í
     string str;
     int cnt = 0;
     while (cnt < 3) {
         //int teachernumber;
-        cout << "è¾“å…¥æ•™å¸ˆå·¥å·ï¼š";
+        cout << "ÊäÈë½ÌÊ¦¹¤ºÅ£º";
         cin >> TeacherNumber;
-        cout << "è¾“å…¥å¯†ç ï¼š";
-        str = getPassword();//æ‰«æå¯†ç 
-        setpassword(str);//æ— æ˜¾å¯†ç 
+        cout << "ÊäÈëÃÜÂë£º";
+        str = getPassword();//É¨ÃèÃÜÂë
+        setpassword(str);//ÎŞÏÔÃÜÂë
         bool identifier = CheckLogin(TeacherNumber, str);
-        cout<<"éªŒè¯ç»“æœ"<<identifier<<endl;
+        cout<<"ÑéÖ¤½á¹û"<<identifier<<endl;
         int i, user_num = 3;
         if(identifier == 1)
         {
             cout << "*******" << endl;
-            cout << "ç™»å½•æˆåŠŸï¼" << endl;
+            cout << "µÇÂ¼³É¹¦£¡" << endl;
             cout << "*******" << endl;
             return true;
         }
         if (identifier == 0) {
             for (i = 0; i < user_num; i++) {
-                str = getPassword();//æ‰«æå¯†ç 
-                setpassword(str);//æ— æ˜¾å¯†ç 
+                str = getPassword();//É¨ÃèÃÜÂë
+                setpassword(str);//ÎŞÏÔÃÜÂë
                 if (CheckLogin(TeacherNumber, str) == 0) {
                     cout << "*******" << endl;
-                    cout << "ç™»å½•æˆåŠŸï¼" << endl;
+                    cout << "µÇÂ¼³É¹¦£¡" << endl;
                     cout << "*******" << endl;
-                    // teacher_operate(); //è·³è½¬æ™®é€šæ•™å¸ˆæ“ä½œUIç•Œé¢
+                    // teacher_operate(); //Ìø×ªÆÕÍ¨½ÌÊ¦²Ù×÷UI½çÃæ
                     return true;
                 } else if (i == user_num) {
                     cnt++;
-                    cout << "ç”¨æˆ·åæˆ–å¯†ç é”™è¯¯ï¼Œè¯·å†æ¬¡è¾“å…¥ç”¨æˆ·åä¸å¯†ç ï¼Œ";
-                    cout << "ä½ è¿˜æœ‰" << 3 - cnt << "æ¬¡æœºä¼š" << endl;
+                    cout << "ÓÃ»§Ãû»òÃÜÂë´íÎó£¬ÇëÔÙ´ÎÊäÈëÓÃ»§ÃûÓëÃÜÂë£¬";
+                    cout << "Äã»¹ÓĞ" << 3 - cnt << "´Î»ú»á" << endl;
                 }
             }
-            if (i > user_num)//å­˜åœ¨é€»è¾‘é—®é¢˜ï¼Œè®°å¾—ä¿®æ­£ä¸€ä¸‹
+            if (i > user_num)//´æÔÚÂß¼­ÎÊÌâ£¬¼ÇµÃĞŞÕıÒ»ÏÂ
             { return false; }
-            if (cnt == 3) { cout << "é”™è¯¯æ¬¡æ•°å·²è¾¾ä¸Šé™ï¼Œç³»ç»Ÿå…³é—­ï¼" << endl;return false; }
+            if (cnt == 3) {
+                cout << "´íÎó´ÎÊıÒÑ´ïÉÏÏŞ£¬ÏµÍ³¹Ø±Õ£¡" << endl;
+                return false; }
         }
     }
+    return 0;
 }
-/**ç¼–è¾‘æ—¶é—´:24-6-26 ä¸Šåˆ1:36
-                *åˆ›å»ºäººï¼šå´åŸ¹æµ©
+/**±à¼­Ê±¼ä:24-6-26 ÉÏÎç1:36
+                *´´½¨ÈË£ºÎâÅàºÆ
                 */
 void Teacher::ViewBookings() {
-    // åˆå§‹åŒ– MySQL å¯¹è±¡
+    // ³õÊ¼»¯ MySQL ¶ÔÏó
     MYSQL* mysql = mysql_init(NULL);
     if (!mysql) {
         std::cerr << "MySQL initialization failed!" << std::endl;
         return;
     }
 
-    // è¿æ¥åˆ° MySQL æ•°æ®åº“
+    // Á¬½Óµ½ MySQL Êı¾İ¿â
     if (!mysql_real_connect(mysql, "localhost", "root", "admin", "school", 3306, NULL, 0)) {
         std::cerr << "Error connecting to database: " << mysql_error(mysql) << std::endl;
         return;
     }
 
-    // SQL æŸ¥è¯¢è¯­å¥ï¼šæŸ¥æ‰¾å½“å‰æ•™å¸ˆçš„æ‰€æœ‰é¢„å®šè®°å½•
+    // SQL ²éÑ¯Óï¾ä£º²éÕÒµ±Ç°½ÌÊ¦µÄËùÓĞÔ¤¶¨¼ÇÂ¼
     std::string query = "SELECT b.BookingID, b.SubmissionTime, c.RoomNumber, c.RoomName, b.BookingDate, b.IsApproved "
                         "FROM BookingRecord b "
                         "JOIN Classroom c ON b.RoomID = c.RoomID "
                         "WHERE b.TeacherID = " + std::to_string(TeacherID);
 
-    // æ‰§è¡Œ SQL æŸ¥è¯¢
+    // Ö´ĞĞ SQL ²éÑ¯
     if (mysql_query(mysql, query.c_str())) {
         std::cerr << "Query error: " << mysql_error(mysql) << std::endl;
         mysql_close(mysql);
         return;
     }
 
-    // è·å–æŸ¥è¯¢ç»“æœé›†
+    // »ñÈ¡²éÑ¯½á¹û¼¯
     MYSQL_RES* res = mysql_store_result(mysql);
     if (!res) {
         std::cerr << "Result error: " << mysql_error(mysql) << std::endl;
@@ -465,7 +457,7 @@ void Teacher::ViewBookings() {
         return;
     }
 
-    // éå†ç»“æœé›†å¹¶æ‰“å°æ¯ä¸€è¡Œæ•°æ®
+    // ±éÀú½á¹û¼¯²¢´òÓ¡Ã¿Ò»ĞĞÊı¾İ
     MYSQL_ROW row;
     while ((row = mysql_fetch_row(res))) {
         std::cout << "Booking ID: " << row[0]
@@ -476,39 +468,39 @@ void Teacher::ViewBookings() {
                   << ", Approved: " << (std::stoi(row[5]) ? "Yes" : "No") << std::endl;
     }
 
-    // é‡Šæ”¾ç»“æœé›†å¹¶å…³é—­æ•°æ®åº“è¿æ¥
+    // ÊÍ·Å½á¹û¼¯²¢¹Ø±ÕÊı¾İ¿âÁ¬½Ó
     mysql_free_result(res);
     mysql_close(mysql);
 }
 
-// æŸ¥çœ‹å¯ç”¨æ•™å®¤çš„å‡½æ•°å®ç°
+// ²é¿´¿ÉÓÃ½ÌÊÒµÄº¯ÊıÊµÏÖ
 void Teacher::ViewAvailableRooms() {
-    // åˆå§‹åŒ– MySQL å¯¹è±¡
+    // ³õÊ¼»¯ MySQL ¶ÔÏó
     MYSQL* mysql = mysql_init(NULL);
     if (!mysql) {
         std::cerr << "MySQL initialization failed!" << std::endl;
         return;
     }
 
-    // è¿æ¥åˆ° MySQL æ•°æ®åº“
+    // Á¬½Óµ½ MySQL Êı¾İ¿â
     if (!mysql_real_connect(mysql, "localhost", "root", "admin", "school", 3306, NULL, 0)) {
         std::cerr << "Error connecting to database: " << mysql_error(mysql) << std::endl;
         return;
     }
 
-    // SQL æŸ¥è¯¢è¯­å¥ï¼šæŸ¥æ‰¾æ‰€æœ‰æœªè¢«å ç”¨çš„æ•™å®¤
+    // SQL ²éÑ¯Óï¾ä£º²éÕÒËùÓĞÎ´±»Õ¼ÓÃµÄ½ÌÊÒ
     std::string query = "SELECT RoomID, RoomNumber, RoomName, Capacity, RoomType "
                         "FROM Classroom "
                         "WHERE IsOccupied = 0";
 
-    // æ‰§è¡Œ SQL æŸ¥è¯¢
+    // Ö´ĞĞ SQL ²éÑ¯
     if (mysql_query(mysql, query.c_str())) {
         std::cerr << "Query error: " << mysql_error(mysql) << std::endl;
         mysql_close(mysql);
         return;
     }
 
-    // è·å–æŸ¥è¯¢ç»“æœé›†
+    // »ñÈ¡²éÑ¯½á¹û¼¯
     MYSQL_RES* res = mysql_store_result(mysql);
     if (!res) {
         std::cerr << "Result error: " << mysql_error(mysql) << std::endl;
@@ -516,7 +508,7 @@ void Teacher::ViewAvailableRooms() {
         return;
     }
 
-    // éå†ç»“æœé›†å¹¶æ‰“å°æ¯ä¸€è¡Œæ•°æ®
+    // ±éÀú½á¹û¼¯²¢´òÓ¡Ã¿Ò»ĞĞÊı¾İ
     MYSQL_ROW row;
     while ((row = mysql_fetch_row(res))) {
         std::cout << "Room ID: " << row[0]
@@ -526,32 +518,32 @@ void Teacher::ViewAvailableRooms() {
                   << ", Room Type: " << row[4] << std::endl;
     }
 
-    // é‡Šæ”¾ç»“æœé›†å¹¶å…³é—­æ•°æ®åº“è¿æ¥
+    // ÊÍ·Å½á¹û¼¯²¢¹Ø±ÕÊı¾İ¿âÁ¬½Ó
     mysql_free_result(res);
     mysql_close(mysql);
 }
 
-// æŸ¥çœ‹æ‰€æœ‰é¢„å®šä¿¡æ¯
+// ²é¿´ËùÓĞÔ¤¶¨ĞÅÏ¢
 void Admin::ViewAllBookings() {
-    // è¿æ¥æ•°æ®åº“ï¼ˆçœç•¥ï¼‰
+    // Á¬½ÓÊı¾İ¿â£¨Ê¡ÂÔ£©
 
-    // æ„é€ æŸ¥è¯¢è¯­å¥
+    // ¹¹Ôì²éÑ¯Óï¾ä
     std::string query = "SELECT * FROM BookingRecord";
 
-    // æ‰§è¡ŒæŸ¥è¯¢
+    // Ö´ĞĞ²éÑ¯
     if (mysql_query(&mysql, query.c_str())) {
         std::cout << "Error querying bookings: " << mysql_error(&mysql) << std::endl;
         return;
     }
 
-    // è·å–ç»“æœé›†
+    // »ñÈ¡½á¹û¼¯
     MYSQL_RES *result = mysql_store_result(&mysql);
     if (!result) {
         std::cout << "Error retrieving result: " << mysql_error(&mysql) << std::endl;
         return;
     }
 
-    // è¾“å‡ºè¡¨å¤´
+    // Êä³ö±íÍ·
     int num_fields = mysql_num_fields(result);
     MYSQL_ROW row;
     for (int i = 0; i < num_fields; i++) {
@@ -560,7 +552,7 @@ void Admin::ViewAllBookings() {
     }
     std::cout << std::endl;
 
-    // è¾“å‡ºæ¯è¡Œæ•°æ®
+    // Êä³öÃ¿ĞĞÊı¾İ
     while ((row = mysql_fetch_row(result))) {
         for (int i = 0; i < num_fields; i++) {
             std::cout << row[i] << '\t';
@@ -568,27 +560,27 @@ void Admin::ViewAllBookings() {
         std::cout << std::endl;
     }
 
-    // é‡Šæ”¾ç»“æœé›†
+    // ÊÍ·Å½á¹û¼¯
     mysql_free_result(result);
 
-    // å…³é—­æ•°æ®åº“è¿æ¥ï¼ˆçœç•¥ï¼‰
+    // ¹Ø±ÕÊı¾İ¿âÁ¬½Ó£¨Ê¡ÂÔ£©
 }
-/**ç¼–è¾‘æ—¶é—´:24-6-26 ä¸Šåˆ2:02
-*åˆ›å»ºäººï¼šå´åŸ¹æµ©
+/**±à¼­Ê±¼ä:24-6-26 ÉÏÎç2:02
+*´´½¨ÈË£ºÎâÅàºÆ
 */
-// æ‰¹å‡†é¢„å®šè¯·æ±‚
+// Åú×¼Ô¤¶¨ÇëÇó
 //bool Admin::ApproveBooking(int bookingID) {
 //
-//    // æ£€æŸ¥æ˜¯å¦å­˜åœ¨æ—¶é—´å’Œæ•™å®¤å†²çª
+//    // ¼ì²éÊÇ·ñ´æÔÚÊ±¼äºÍ½ÌÊÒ³åÍ»
 //    if (CheckConflict(bookingID, bookingDate)) {
 //        std::cout << "Booking conflicts with existing schedule. Please choose another room or time." << std::endl;
 //        return false;
 //    }
 //
-//    // æ„é€ æ›´æ–°è¯­å¥
+//    // ¹¹Ôì¸üĞÂÓï¾ä
 //    std::string query = "UPDATE BookingRecord SET IsApproved = true WHERE BookingID = " + std::to_string(bookingID);
 //
-//    // æ‰§è¡Œæ›´æ–°
+//    // Ö´ĞĞ¸üĞÂ
 //    if (mysql_query(&mysql, query.c_str())) {
 //        std::cout << "Error approving booking: " << mysql_error(&mysql) << std::endl;
 //        return false;
@@ -597,43 +589,43 @@ void Admin::ViewAllBookings() {
 //    std::cout << "Booking with ID " << bookingID << " approved successfully." << std::endl;
 //    return true;
 //}
-//åºŸå¼ƒ
-/**ç¼–è¾‘æ—¶é—´:24-6-26 ä¸‹åˆ12:40
-*åˆ›å»ºäººï¼šå´åŸ¹æµ©
+//·ÏÆú
+/**±à¼­Ê±¼ä:24-6-26 ÏÂÎç12:40
+*´´½¨ÈË£ºÎâÅàºÆ
 */
-// å®ç°æ£€æŸ¥å†²çªçš„å‡½æ•°
+// ÊµÏÖ¼ì²é³åÍ»µÄº¯Êı
 bool Admin::CheckConflict(int roomID, const std::string& bookingDate) {
-    // 1. æ„é€ æŸ¥è¯¢è¯­å¥
+    // 1. ¹¹Ôì²éÑ¯Óï¾ä
     std::string query = "SELECT COUNT(*) FROM BookingRecord "
                         "WHERE RoomID = " + std::to_string(roomID) +
                         " AND BookingDate = '" + bookingDate + "'"
                                                                " AND IsApproved = true";
 
-    // 2. æ‰§è¡ŒæŸ¥è¯¢
+    // 2. Ö´ĞĞ²éÑ¯
     if (mysql_query(&mysql, query.c_str())) {
         std::cout << "Error checking conflict: " << mysql_error(&mysql) << std::endl;
         return true;
     }
 
-    // 3. è·å–ç»“æœé›†
+    // 3. »ñÈ¡½á¹û¼¯
     MYSQL_RES *result = mysql_store_result(&mysql);
     if (!result) {
         std::cout << "Error retrieving result: " << mysql_error(&mysql) << std::endl;
         return true;
     }
 
-    // 4. è·å–è¡Œæ•°æ®
+    // 4. »ñÈ¡ĞĞÊı¾İ
     MYSQL_ROW row = mysql_fetch_row(result);
     int conflictCount = std::stoi(row[0]);
 
-    // 5. é‡Šæ”¾ç»“æœé›†
+    // 5. ÊÍ·Å½á¹û¼¯
     mysql_free_result(result);
 
-    // 6. è¿”å›æ˜¯å¦æœ‰å†²çª
+    // 6. ·µ»ØÊÇ·ñÓĞ³åÍ»
     return conflictCount > 0;
 }
 
-// è·å–é¢„è®¢è¯¦ç»†ä¿¡æ¯çš„è¾…åŠ©å‡½æ•°
+// »ñÈ¡Ô¤¶©ÏêÏ¸ĞÅÏ¢µÄ¸¨Öúº¯Êı
 bool Admin::GetBookingDetails(int bookingID, int &roomID, std::string &bookingDate) {
     std::string query = "SELECT RoomID, BookingDate FROM BookingRecord WHERE BookingID = " + std::to_string(bookingID);
 
@@ -662,7 +654,7 @@ bool Admin::GetBookingDetails(int bookingID, int &roomID, std::string &bookingDa
     return true;
 }
 
-// å®ç°å–æ¶ˆé¢„å®šçš„å‡½æ•°
+// ÊµÏÖÈ¡ÏûÔ¤¶¨µÄº¯Êı
 bool Admin::CancelBooking(int bookingID) {
     std::string query = "DELETE FROM BookingRecord WHERE BookingID = " + std::to_string(bookingID);
 
@@ -674,86 +666,90 @@ bool Admin::CancelBooking(int bookingID) {
     std::cout << "Booking with ID " << bookingID << " cancelled successfully." << std::endl;
     return true;
 }
-// å®¡æ‰¹é¢„å®šè¯·æ±‚çš„å‡½æ•°ï¼Œæ¥å—ä¸€ä¸ªé¢„å®šçš„å”¯ä¸€æ ‡è¯† bookingID ä½œä¸ºå‚æ•°
+// ÉóÅúÔ¤¶¨ÇëÇóµÄº¯Êı£¬½ÓÊÜÒ»¸öÔ¤¶¨µÄÎ¨Ò»±êÊ¶ bookingID ×÷Îª²ÎÊı
 bool Admin::ApproveBooking(int bookingID) {
 
-    // 1. æŸ¥è¯¢å½“å‰é¢„è®¢çš„æˆ¿é—´å’Œæ—¥æœŸ
-    // æ„é€  SQL æŸ¥è¯¢è¯­å¥ï¼ŒæŸ¥è¯¢ç»™å®š bookingID å¯¹åº”çš„ RoomID å’Œ BookingDate
+    // 1. ²éÑ¯µ±Ç°Ô¤¶©µÄ·¿¼äºÍÈÕÆÚ
+    // ¹¹Ôì SQL ²éÑ¯Óï¾ä£¬²éÑ¯¸ø¶¨ bookingID ¶ÔÓ¦µÄ RoomID ºÍ BookingDate
     std::string query = "SELECT RoomID, BookingDate FROM BookingRecord WHERE BookingID = " + std::to_string(bookingID);
 
-    // 2. æ‰§è¡ŒæŸ¥è¯¢
-    // ä½¿ç”¨ mysql_query æ‰§è¡Œ SQL æŸ¥è¯¢
+    // 2. Ö´ĞĞ²éÑ¯
+    // Ê¹ÓÃ mysql_query Ö´ĞĞ SQL ²éÑ¯
     if (mysql_query(&mysql, query.c_str())) {
-        // å¦‚æœæŸ¥è¯¢å¤±è´¥ï¼Œè¾“å‡ºé”™è¯¯ä¿¡æ¯å¹¶è¿”å› false
+        // Èç¹û²éÑ¯Ê§°Ü£¬Êä³ö´íÎóĞÅÏ¢²¢·µ»Ø false
         std::cout << "Error querying booking record: " << mysql_error(&mysql) << std::endl;
         return false;
     }
 
-    // 3. è·å–ç»“æœé›†
-    // mysql_store_result ç”¨äºè·å–æŸ¥è¯¢çš„ç»“æœé›†
+    // 3. »ñÈ¡½á¹û¼¯
+    // mysql_store_result ÓÃÓÚ»ñÈ¡²éÑ¯µÄ½á¹û¼¯
     MYSQL_RES *result = mysql_store_result(&mysql);
     if (!result) {
-        // å¦‚æœè·å–ç»“æœé›†å¤±è´¥ï¼Œè¾“å‡ºé”™è¯¯ä¿¡æ¯å¹¶è¿”å› false
+        // Èç¹û»ñÈ¡½á¹û¼¯Ê§°Ü£¬Êä³ö´íÎóĞÅÏ¢²¢·µ»Ø false
         std::cout << "Error retrieving result: " << mysql_error(&mysql) << std::endl;
         return false;
     }
 
-    // 4. æ£€æŸ¥æ˜¯å¦æœ‰ç»“æœ
-    // ä½¿ç”¨ mysql_num_rows æ£€æŸ¥ç»“æœé›†ä¸­æ˜¯å¦æœ‰è®°å½•
+    // 4. ¼ì²éÊÇ·ñÓĞ½á¹û
+    // Ê¹ÓÃ mysql_num_rows ¼ì²é½á¹û¼¯ÖĞÊÇ·ñÓĞ¼ÇÂ¼
     if (mysql_num_rows(result) == 0) {
-        // å¦‚æœç»“æœé›†ä¸ºç©ºï¼Œè¯´æ˜æ²¡æœ‰æ‰¾åˆ°å¯¹åº”çš„é¢„è®¢ï¼Œè¾“å‡ºä¿¡æ¯å¹¶é‡Šæ”¾ç»“æœé›†ï¼Œç„¶åè¿”å› false
+        // Èç¹û½á¹û¼¯Îª¿Õ£¬ËµÃ÷Ã»ÓĞÕÒµ½¶ÔÓ¦µÄÔ¤¶©£¬Êä³öĞÅÏ¢²¢ÊÍ·Å½á¹û¼¯£¬È»ºó·µ»Ø false
         std::cout << "No booking found with ID " << bookingID << std::endl;
         mysql_free_result(result);
         return false;
     }
 
-    // 5. è·å– RoomID å’Œ BookingDate
-    // ä½¿ç”¨ mysql_fetch_row ä»ç»“æœé›†ä¸­è·å–ä¸€è¡Œæ•°æ®
+    // 5. »ñÈ¡ RoomID ºÍ BookingDate
+    // Ê¹ÓÃ mysql_fetch_row ´Ó½á¹û¼¯ÖĞ»ñÈ¡Ò»ĞĞÊı¾İ
     MYSQL_ROW row = mysql_fetch_row(result);
-    int roomID = std::stoi(row[0]); // å°†ç¬¬ä¸€åˆ—ï¼ˆRoomIDï¼‰è½¬æ¢ä¸ºæ•´æ•°
-    std::string bookingDate = row[1]; // è·å–ç¬¬äºŒåˆ—ï¼ˆBookingDateï¼‰çš„å­—ç¬¦ä¸²
+    int roomID = std::stoi(row[0]); // ½«µÚÒ»ÁĞ£¨RoomID£©×ª»»ÎªÕûÊı
+    std::string bookingDate = row[1]; // »ñÈ¡µÚ¶şÁĞ£¨BookingDate£©µÄ×Ö·û´®
 
-    // 6. é‡Šæ”¾ç»“æœé›†
-    // é‡Šæ”¾æŸ¥è¯¢ç»“æœé›†çš„å†…å­˜
+    // 6. ÊÍ·Å½á¹û¼¯
+    // ÊÍ·Å²éÑ¯½á¹û¼¯µÄÄÚ´æ
     mysql_free_result(result);
 
-    // 7. æ£€æŸ¥æ˜¯å¦å­˜åœ¨æ—¶é—´å’Œæ•™å®¤å†²çª
-    // è°ƒç”¨ CheckConflict å‡½æ•°æ£€æŸ¥é¢„è®¢æ˜¯å¦ä¸ç°æœ‰çš„å®‰æ’å†²çª
+    // 7. ¼ì²éÊÇ·ñ´æÔÚÊ±¼äºÍ½ÌÊÒ³åÍ»
+    // µ÷ÓÃ CheckConflict º¯Êı¼ì²éÔ¤¶©ÊÇ·ñÓëÏÖÓĞµÄ°²ÅÅ³åÍ»
     if (CheckConflict(roomID, bookingDate)) {
-        // å¦‚æœæœ‰å†²çªï¼Œè¾“å‡ºå†²çªä¿¡æ¯å¹¶è¿”å› false
+        // Èç¹ûÓĞ³åÍ»£¬Êä³ö³åÍ»ĞÅÏ¢²¢·µ»Ø false
         std::cout << "Booking conflicts with existing schedule. Please choose another room or time." << std::endl;
         return false;
     }
 
-    // 8. æ„é€ æ›´æ–°è¯­å¥ï¼Œæ‰¹å‡†é¢„è®¢
-    // æ›´æ–° BookingRecord è¡¨ï¼Œè®¾ç½® IsApproved ä¸º true è¡¨ç¤ºæ‰¹å‡†é¢„è®¢
+    // 8. ¹¹Ôì¸üĞÂÓï¾ä£¬Åú×¼Ô¤¶©
+    // ¸üĞÂ BookingRecord ±í£¬ÉèÖÃ IsApproved Îª true ±íÊ¾Åú×¼Ô¤¶©
     query = "UPDATE BookingRecord SET IsApproved = true WHERE BookingID = " + std::to_string(bookingID);
 
-    // 9. æ‰§è¡Œæ›´æ–°
-    // ä½¿ç”¨ mysql_query æ‰§è¡Œ SQL æ›´æ–°è¯­å¥
+    // 9. Ö´ĞĞ¸üĞÂ
+    // Ê¹ÓÃ mysql_query Ö´ĞĞ SQL ¸üĞÂÓï¾ä
     if (mysql_query(&mysql, query.c_str())) {
-        // å¦‚æœæ›´æ–°å¤±è´¥ï¼Œè¾“å‡ºé”™è¯¯ä¿¡æ¯å¹¶è¿”å› false
+        // Èç¹û¸üĞÂÊ§°Ü£¬Êä³ö´íÎóĞÅÏ¢²¢·µ»Ø false
         std::cout << "Error approving booking: " << mysql_error(&mysql) << std::endl;
         return false;
     }
 
-    // 10. è¾“å‡ºæˆåŠŸä¿¡æ¯å¹¶è¿”å› true
-    // å¦‚æœæ›´æ–°æˆåŠŸï¼Œè¾“å‡ºæˆåŠŸä¿¡æ¯å¹¶è¿”å› true
+    // 10. Êä³ö³É¹¦ĞÅÏ¢²¢·µ»Ø true
+    // Èç¹û¸üĞÂ³É¹¦£¬Êä³ö³É¹¦ĞÅÏ¢²¢·µ»Ø true
     std::cout << "Booking with ID " << bookingID << " approved successfully." << std::endl;
     return true;
 }
 bool Teacher::ModifyBooking(int bookingID, int roomID, const std::string& bookingDate) {
-    // æ£€æŸ¥æ˜¯å¦å­˜åœ¨æ—¶é—´å’Œæ•™å®¤å†²çª
+    if (!isValidDate(bookingDate) || !isDateInRange(bookingDate)) {
+        std::cerr << "ÈÕÆÚ¸ñÊ½ÎŞĞ§»ò³¬³ö·¶Î§£¬ÇëÊäÈëÕıÈ·µÄÈÕÆÚ (YYYY-MM-DD)." << std::endl;
+        return false;
+    }
+    // ¼ì²éÊÇ·ñ´æÔÚÊ±¼äºÍ½ÌÊÒ³åÍ»
     if (CheckConflict(roomID, bookingDate)) {
         std::cout << "Booking conflicts with existing schedule. Please choose another room or time." << std::endl;
         return false;
     }
 
-    // æ„é€ æ›´æ–°è¯­å¥
+    // ¹¹Ôì¸üĞÂÓï¾ä
     std::string query = "UPDATE BookingRecord SET RoomID = " + std::to_string(roomID) +
                         ", BookingDate = '" + bookingDate + "' WHERE BookingID = " + std::to_string(bookingID);
 
-    // æ‰§è¡Œæ›´æ–°
+    // Ö´ĞĞ¸üĞÂ
     if (mysql_query(&mysql, query.c_str())) {
         std::cout << "Error modifying booking: " << mysql_error(&mysql) << std::endl;
         return false;
@@ -763,17 +759,199 @@ bool Teacher::ModifyBooking(int bookingID, int roomID, const std::string& bookin
     return true;
 }
 
-// å–æ¶ˆé¢„å®šçš„å‡½æ•°
+// È¡ÏûÔ¤¶¨µÄº¯Êı
 bool Teacher::CancelBooking(int bookingID) {
-    // æ„é€ åˆ é™¤è¯­å¥
+    // ¹¹ÔìÉ¾³ıÓï¾ä
     std::string query = "DELETE FROM BookingRecord WHERE BookingID = " + std::to_string(bookingID);
-
-    // æ‰§è¡Œåˆ é™¤
+    // Ö´ĞĞÉ¾³ı
     if (mysql_query(&mysql, query.c_str())) {
         std::cout << "Error canceling booking: " << mysql_error(&mysql) << std::endl;
         return false;
     }
-
     std::cout << "Booking with ID " << bookingID << " canceled successfully." << std::endl;
     return true;
+}
+
+int Teacher::getTeacherId() const {
+    return TeacherID;
+}
+
+int Teacher::getTeacherNumber() const {
+    return TeacherNumber;
+}
+
+const string &Teacher::getTeacherName() const {
+    return TeacherName;
+}
+
+int Teacher::getPermissionLevel() const {
+    return PermissionLevel;
+}
+
+const string &Teacher::getPhoneNumber() const {
+    return PhoneNumber;
+}
+
+const string &Teacher::getOfficeName() const {
+    return OfficeName;
+}
+
+
+void Teacher::getDateFromTeacher(std::string& bookingDate) {
+    std::cout << "ÇëÊäÈëÔ¤Ô¼ÈÕÆÚ (¸ñÊ½: YYYY-MM-DD): ";
+    std::cin >> bookingDate;
+
+    while (!isValidDate(bookingDate) || !isDateInRange(bookingDate)) {
+        std::cout << "ÎŞĞ§µÄÈÕÆÚ¸ñÊ½»òÈÕÆÚ³¬³ö·¶Î§£¬ÇëÖØĞÂÊäÈë (¸ñÊ½: YYYY-MM-DD): ";
+        std::cin >> bookingDate;
+    }
+}
+// º¯Êı£º¼ì²éÈÕÆÚÊÇ·ñÓĞ¿ÉÓÃ½ÌÊÒ
+bool Teacher::isDateAvailable(int roomID, const std::string& bookingDate) {
+    // ³õÊ¼»¯ MySQL Á¬½Ó
+    MYSQL* mysql = mysql_init(nullptr);
+    if (!mysql) {
+        std::cerr << "MySQL ³õÊ¼»¯Ê§°Ü£¡" << std::endl;
+        return false;
+    }
+
+    // Á¬½Óµ½ MySQL Êı¾İ¿â
+    if (!mysql_real_connect(mysql, "localhost", "root", "admin", "school", 3306, nullptr, 0)) {
+        std::cerr << "Êı¾İ¿âÁ¬½ÓÊ§°Ü: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql); // ¹Ø±ÕÁ¬½Ó£¬·ÀÖ¹×ÊÔ´Ğ¹Â¶
+        return false;
+    }
+
+    // ¹¹Ôì SQL ²éÑ¯Óï¾ä
+    std::string checkQuery = "SELECT * FROM bookingrecord WHERE RoomID = " + std::to_string(roomID) +
+                             " AND BookingDate = '" + bookingDate + "'";
+
+    // Ö´ĞĞ²éÑ¯
+    if (mysql_query(mysql, checkQuery.c_str())) {
+        std::cerr << "²éÑ¯Ê§°Ü: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql); // ¹Ø±ÕÁ¬½Ó£¬·ÀÖ¹×ÊÔ´Ğ¹Â¶
+        return false;
+    }
+
+    // »ñÈ¡½á¹û
+    MYSQL_RES* res = mysql_store_result(mysql);
+    if (!res) {
+        std::cerr << "»ñÈ¡½á¹ûÊ§°Ü: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql); // ¹Ø±ÕÁ¬½Ó£¬·ÀÖ¹×ÊÔ´Ğ¹Â¶
+        return false;
+    }
+
+    // ¼ì²é½á¹ûĞĞÊı
+    int num_rows = mysql_num_rows(res);
+    mysql_free_result(res); // ÊÍ·Å½á¹û×ÊÔ´
+
+    // ¹Ø±ÕÁ¬½Ó
+    mysql_close(mysql);
+
+    return num_rows == 0; // ·µ»Ø true ±íÊ¾Ã»ÓĞ³åÍ»
+}
+void Teacher::Loginshow(){
+    cout << "===============================================" << endl;
+    cout << endl;
+    cout << "»¶Ó­Ê¹ÓÃ½ÌÊÒÔ¤Ô¼ÏµÍ³£¡" <<getTeacherName()<< endl;
+    cout << "===============================================" << endl;
+    cout << "1.²éÑ¯µ±Ç°¿ÕÓà½ÌÊÒ    2.²é¿´ÄúµÄÔ¤¶¨   3.ĞŞ¸ÄÄúµÄÔ¤¶¨     4.ÍË³öÏµÍ³" << endl;
+}
+// º¯Êı£ºÔ¤¶©½ÌÊÒ
+
+bool Teacher::BookRoom(int roomID, const std::string& bookingDate) {
+    if (!isValidDate(bookingDate) || !isDateInRange(bookingDate)) {
+        std::cerr << "ÈÕÆÚ¸ñÊ½ÎŞĞ§»ò³¬³ö·¶Î§£¬ÇëÊäÈëÕıÈ·µÄÈÕÆÚ (YYYY-MM-DD)." << std::endl;
+        return false;
+    }
+
+    if (!isDateAvailable(roomID, bookingDate)) {
+        std::cerr << "¸ÃÈÕÆÚºÍ½ÌÊÒÒÑ±»Ô¤¶©£¬ÇëÑ¡ÔñÆäËûÈÕÆÚ»ò½ÌÊÒ¡£" << std::endl;
+        return false;
+    }
+
+    // ³õÊ¼»¯ MySQL Á¬½Ó
+    MYSQL* mysql = mysql_init(NULL);
+    if (!mysql) {
+        std::cerr << "MySQL ³õÊ¼»¯Ê§°Ü£¡" << std::endl;
+        return false;
+    }
+
+    // Á¬½Óµ½ MySQL Êı¾İ¿â
+    if (!mysql_real_connect(mysql, "localhost", "root", "admin", "school", 3306, NULL, 0)) {
+        std::cerr << "Êı¾İ¿âÁ¬½ÓÊ§°Ü: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql); // ¹Ø±ÕÁ¬½Ó£¬·ÀÖ¹×ÊÔ´Ğ¹Â¶
+        return false;
+    }
+
+    // ¹¹Ôì SQL ²åÈëÓï¾ä
+    std::string query = "INSERT INTO bookingrecord (RoomID, TeacherID, BookingDate, IsApproved) VALUES (" +
+                        std::to_string(roomID) + ", " + std::to_string(this->TeacherID) + ", '" + bookingDate + "', 0)";
+
+    // Ö´ĞĞ²éÑ¯
+    if (mysql_query(mysql, query.c_str())) {
+        std::cerr << "Êı¾İ¿â²Ù×÷Ê§°Ü: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql); // ¹Ø±ÕÁ¬½Ó£¬·ÀÖ¹×ÊÔ´Ğ¹Â¶
+        return false;
+    }
+
+    std::cout << "½ÌÊÒÔ¤Ô¼³É¹¦£¡" << std::endl;
+
+    // ¹Ø±ÕÁ¬½Ó
+    mysql_close(mysql);
+
+    return true;
+}
+void Teacher::OptionChoice(){
+    int option;
+    int BookingId,RoomId;
+    int judge=1;
+    string newtime;
+    do {
+        Loginshow();
+        cout<<"ÊäÈë²Ù×÷"<<endl;
+        cin>>option;
+
+        switch (option) {
+            case 1:
+                ViewAvailableRooms();
+                //²åÈëÊÇ·ñÔ¤¶¨//·ñµÄ»°ÍË³öº¯Êı£»
+                break;
+            case 2:
+                //²é¿´±¾ÈËÔ¤¶¨
+                ViewBookings();
+                cout<<"ÊÇ·ñĞèÒªĞÂ½¨±¾ÈËÔ¤¶¨£¿"<<endl;
+                cout<<"ÇëÊäÈë1»ò0´ú±íÊÇºÍ·ñ"<<endl;
+                cin>>judge;
+                if(judge==1){
+                    cout<<"ÇëÊäÈë½ÌÊÒºÅºÍÔ¤Ô¼Ê±¼ä(¸ñÊ½YYYY-MM-DD)"<<endl;
+                    cin>>RoomId;
+                    cin>>newtime;
+                    BookRoom(RoomId,newtime);
+                }else
+                {
+                    cout<<"½áÊø²Ù×÷"<<endl;
+                }
+
+                break;
+            case 3:
+                //ĞŞ¸Ä±¾ÈËÔ¤¶¨
+                ViewBookings();
+                cout<<"ĞèÒªĞŞ¸ÄÄÄÒ»ÌõÔ¤¶¨?"<<endl;
+                cout<<"ÊäÈëÔ¤¶¨±àºÅ£¬Ô¤ÆÚ½ÌÊÒ±àºÅºÍÔ¤¶¨Ê±¼ä"<<endl;
+                cin>>BookingId;
+                cin>>RoomId;
+                cin>>newtime;
+                ModifyBooking(BookingId,RoomId, newtime);
+                break;
+            case 4:
+                cout << "»¶Ó­ÏÂ´ÎÊ¹ÓÃ£¡" << endl;
+                break;
+            default:
+                cout << "ÎŞĞ§µÄÑ¡Ïî£¬ÇëÊäÈëÓĞĞ§µÄ²Ù×÷Ñ¡Ïî£¨1-4£©¡£" << endl;
+                break;
+        }
+    } while (option != 4);
+
+
 }

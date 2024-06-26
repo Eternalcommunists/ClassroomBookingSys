@@ -1,38 +1,40 @@
 //
-// Created by å´åŸ¹æµ© on 24-6-26.
+// Created by ÎâÅàºÆ on 24-6-26.
 //
 #include <iostream>
 #include<string>
-#include "Teacher.h"
-#include "Reservation.h"
+
+MYSQL mysql;
+MYSQL_RES *res;//Õâ¸ö½á¹¹´ú±í·µ»ØĞĞµÄÒ»¸ö²éÑ¯½á¹û¼¯
+MYSQL_ROW column;
 
 #ifndef UNTITLED1_ROOM_H
 #define UNTITLED1_ROOM_H
 
 #endif //UNTITLED1_ROOM_H
 using namespace std;
-// å®šä¹‰æ•™å®¤ç±»å‹
-enum RoomType { LAB = 1, MULTIMEDIA = 2, RECORDING = 3 };
+// ¶¨Òå½ÌÊÒÀàĞÍ
+//enum RoomType { LAB = 1, MULTIMEDIA = 2, RECORDING = 3 };
 
 
-// å®šä¹‰æ•™å®¤ç±»
+// ¶¨Òå½ÌÊÒÀà
 class Room {
 protected:
-    int roomNumber;//æ•™å®¤å·
-    string roomName;//æ•™å®¤åç§°
-    int capacity;//å®¹çº³äººæ•°
-    bool isOccupied;//å½“å‰å ç”¨çŠ¶æ€
-    //RoomType roomType;//æ•™å®¤ç±»å‹ç±»å·
+    int roomNumber;//½ÌÊÒºÅ
+    string roomName;//½ÌÊÒÃû³Æ
+    int capacity;//ÈİÄÉÈËÊı
+    bool isOccupied;//µ±Ç°Õ¼ÓÃ×´Ì¬
+    //RoomType roomType;//½ÌÊÒÀàĞÍÀàºÅ
     // other attributes
 public:
     // constructor, destructor, getters, setters, etc.
     virtual void display() = 0; // pure virtual function
-    friend ostream& operator<<(ostream& os, const Room& room);//â€œè¾“å‡ºæµâ€å°†roomç±»ä¿¡æ¯è¾“å‡ºåˆ°ç•Œé¢
-    friend istream& operator>>(istream& is, Room& room);//â€œè¾“å…¥æµâ€å°†ä¿¡æ¯è¾“å…¥åˆ°roomç±»é‡Œ
-    void saveToFile(ofstream& file);//å°†roomä¿¡æ¯å­˜å…¥æ–‡ä»¶
-    void loadFromFile(ifstream& file);//å°†roomä¿¡æ¯åŠ è½½è¿›ç•Œé¢
+    friend ostream& operator<<(ostream& os, const Room& room);//¡°Êä³öÁ÷¡±½«roomÀàĞÅÏ¢Êä³öµ½½çÃæ
+    friend istream& operator>>(istream& is, Room& room);//¡°ÊäÈëÁ÷¡±½«ĞÅÏ¢ÊäÈëµ½roomÀàÀï
+    void saveToFile(ofstream& file);//½«roomĞÅÏ¢´æÈëÎÄ¼ş
+    void loadFromFile(ifstream& file);//½«roomĞÅÏ¢¼ÓÔØ½ø½çÃæ
 };
-// displayå‡½æ•°çš„ä¸»ä½“å®ç°
+// displayº¯ÊıµÄÖ÷ÌåÊµÏÖ
 void Room::display() {
     cout << "Room roomNumber: " << roomNumber<< endl;
     cout<<"Room roomName: "<<roomName<<endl;
@@ -40,7 +42,7 @@ void Room::display() {
     cout << "Room capacity: " << capacity << endl;
     cout << "Is Occupied: " << (isOccupied ? "Yes" : "No") << endl;
 }
-// operator<<å‡½æ•°çš„ä¸»ä½“å®ç°
+// operator<<º¯ÊıµÄÖ÷ÌåÊµÏÖ
 ostream& operator<<(ostream& os, const Room& room) {
     os << "Room roomNumber: " << room.roomNumber << endl;
     os<<"Room roomName: "<<room.roomName<<endl;
@@ -50,7 +52,7 @@ ostream& operator<<(ostream& os, const Room& room) {
     return os;
 }
 
-// saveToFileå‡½æ•°çš„ä¸»ä½“å®ç°
+// saveToFileº¯ÊıµÄÖ÷ÌåÊµÏÖ
 void Room::saveToFile(ofstream& file) {
     file << roomNumber << endl;
     file << roomName<< endl;
@@ -59,7 +61,7 @@ void Room::saveToFile(ofstream& file) {
     file<<isOccupied<<endl;
 }
 
-// loadFromFileå‡½æ•°çš„ä¸»ä½“å®ç°
+// loadFromFileº¯ÊıµÄÖ÷ÌåÊµÏÖ
 void Room::loadFromFile(ifstream& file) {
     file >> roomNumber;
     file >> roomName;
@@ -68,17 +70,17 @@ void Room::loadFromFile(ifstream& file) {
     file >> isOccupied;
 }
 
-// å®šä¹‰å®éªŒå®¤ç±»
+// ¶¨ÒåÊµÑéÊÒÀà
 class Lab : public Room {
     int labType;
     // other attributes
 public:
     // constructor, destructor, getters, setters, etc.
     void display() override; // override the pure virtual function
-    friend ostream& operator<<(ostream& os, const Lab& lab);//â€œè¾“å‡ºæµâ€å°†labç±»ä¿¡æ¯è¾“å‡ºåˆ°ç•Œé¢
-    friend istream& operator>>(istream& is, Lab& lab);//â€œè¾“å…¥æµâ€å°†ä¿¡æ¯è¾“å…¥åˆ°labç±»é‡Œ
-    void saveToFile(ofstream& file);//å°†roomä¿¡æ¯å­˜å…¥æ–‡ä»¶
-    void loadFromFile(ifstream& file);//å°†roomä¿¡æ¯åŠ è½½è¿›ç•Œé¢
+    friend ostream& operator<<(ostream& os, const Lab& lab);//¡°Êä³öÁ÷¡±½«labÀàĞÅÏ¢Êä³öµ½½çÃæ
+    friend istream& operator>>(istream& is, Lab& lab);//¡°ÊäÈëÁ÷¡±½«ĞÅÏ¢ÊäÈëµ½labÀàÀï
+    void saveToFile(ofstream& file);//½«roomĞÅÏ¢´æÈëÎÄ¼ş
+    void loadFromFile(ifstream& file);//½«roomĞÅÏ¢¼ÓÔØ½ø½çÃæ
     void setRoomNumber(int number) { roomNumber = number; }
     void setRoomName(const string& name) { roomName = name; }
     void setCapacity(int cap) { capacity = cap; }
@@ -86,7 +88,7 @@ public:
     void setIsOccupied(bool occupied) { isOccupied = occupied; }
 
 };
-// displayå‡½æ•°çš„ä¸»ä½“å®ç°
+// displayº¯ÊıµÄÖ÷ÌåÊµÏÖ
 void Lab::display() {
     cout << "Lab roomNumber: " << roomNumber << endl;
     cout<<"Lab roomName: "<<roomName<<endl;
@@ -94,7 +96,7 @@ void Lab::display() {
     cout << "Lab Capacity: " << capacity << endl;
     cout << "Is Occupied: " << (isOccupied ? "Yes" : "No") << endl;
 }
-// operator<<å‡½æ•°çš„ä¸»ä½“å®ç°
+// operator<<º¯ÊıµÄÖ÷ÌåÊµÏÖ
 ostream& operator<<(ostream& os, const Lab& lab) {
     os << "Lab roomNumber: " << lab.roomNumber << endl;
     os<<"Lab roomName: "<<lab.roomName<<endl;
@@ -103,7 +105,7 @@ ostream& operator<<(ostream& os, const Lab& lab) {
     os << "Is Occupied: " << (lab.isOccupied ? "Yes" : "No") << endl;
     return os;
 }
-// operator>>å‡½æ•°çš„ä¸»ä½“å®ç°
+// operator>>º¯ÊıµÄÖ÷ÌåÊµÏÖ
 istream& operator>>(istream& is, Lab& lab) {
     cout << "Enter Lab roomNumber: ";
     is >> lab.roomNumber;
@@ -117,7 +119,7 @@ istream& operator>>(istream& is, Lab& lab) {
     is >> lab.isOccupied;
     return is;
 }
-// saveToFileå‡½æ•°çš„ä¸»ä½“å®ç°
+// saveToFileº¯ÊıµÄÖ÷ÌåÊµÏÖ
 void Lab::saveToFile(ofstream& file) {
     file << roomNumber<< endl;
     file << roomName << endl;
@@ -125,7 +127,7 @@ void Lab::saveToFile(ofstream& file) {
     file << capacity << endl;
     file << isOccupied << endl;
 }
-// loadFromFileå‡½æ•°çš„ä¸»ä½“å®ç°
+// loadFromFileº¯ÊıµÄÖ÷ÌåÊµÏÖ
 void Lab::loadFromFile(ifstream& file) {
     file >> roomNumber;
     file.ignore();
@@ -134,19 +136,19 @@ void Lab::loadFromFile(ifstream& file) {
     file >> labType;
     file >> isOccupied;
 }
-// å®šä¹‰å¤šåª’ä½“æ•™å®¤ç±»
+// ¶¨Òå¶àÃ½Ìå½ÌÊÒÀà
 class MultimediaRoom : public Room {
     int airConditioners;
     // other attributes
 public:
     // constructor, destructor, getters, setters, etc.
     void display() override; // override the pure virtual function
-    friend ostream& operator<<(ostream& os, const MultimediaRoom& room); // è¾“å‡ºæµè¿ç®—ç¬¦
-    friend istream& operator>>(istream& is, MultimediaRoom& room); // è¾“å…¥æµè¿ç®—ç¬¦
-    void saveToFile(ofstream& file); // å°†MultimediaRoomä¿¡æ¯å­˜å…¥æ–‡ä»¶
-    void loadFromFile(ifstream& file); // å°†MultimediaRoomä¿¡æ¯åŠ è½½è¿›ç•Œé¢
+    friend ostream& operator<<(ostream& os, const MultimediaRoom& room); // Êä³öÁ÷ÔËËã·û
+    friend istream& operator>>(istream& is, MultimediaRoom& room); // ÊäÈëÁ÷ÔËËã·û
+    void saveToFile(ofstream& file); // ½«MultimediaRoomĞÅÏ¢´æÈëÎÄ¼ş
+    void loadFromFile(ifstream& file); // ½«MultimediaRoomĞÅÏ¢¼ÓÔØ½ø½çÃæ
 };
-// å®ç°displayå‡½æ•°
+// ÊµÏÖdisplayº¯Êı
 void MultimediaRoom::display() {
     cout << "Room Number: " << roomNumber << endl;
     cout << "Room Name: " << roomName << endl;
@@ -154,7 +156,7 @@ void MultimediaRoom::display() {
     cout << "Capacity: " << capacity << endl;
     cout << "Is Occupied: " << (isOccupied ? "Yes" : "No") << endl;
 }
-// å®ç°è¾“å‡ºæµè¿ç®—ç¬¦
+// ÊµÏÖÊä³öÁ÷ÔËËã·û
 ostream& operator<<(ostream& os, const MultimediaRoom& room) {
     os << "Room Number: " << room.roomNumber << endl;
     os << "Room Name: " << room.roomName << endl;
@@ -163,7 +165,7 @@ ostream& operator<<(ostream& os, const MultimediaRoom& room) {
     os << "Is Occupied: " << (room.isOccupied ? "Yes" : "No") << endl;
     return os;
 }
-// å®ç°è¾“å…¥æµè¿ç®—ç¬¦
+// ÊµÏÖÊäÈëÁ÷ÔËËã·û
 istream& operator>>(istream& is, MultimediaRoom& room) {
     cout << "Enter Room Number: ";
     is >> room.roomNumber;
@@ -177,7 +179,7 @@ istream& operator>>(istream& is, MultimediaRoom& room) {
     is >> room.isOccupied;
     return is;
 }
-// å®ç°ä¿å­˜åˆ°æ–‡ä»¶å‡½æ•°
+// ÊµÏÖ±£´æµ½ÎÄ¼şº¯Êı
 void MultimediaRoom::saveToFile(ofstream& file) {
     file << roomNumber << endl;
     file << roomName << endl;
@@ -185,29 +187,28 @@ void MultimediaRoom::saveToFile(ofstream& file) {
     file << capacity << endl;
     file << isOccupied << endl;
 }
-// å®ç°ä»æ–‡ä»¶åŠ è½½å‡½æ•°
+// ÊµÏÖ´ÓÎÄ¼ş¼ÓÔØº¯Êı
 void MultimediaRoom::loadFromFile(ifstream& file) {
     file >> roomNumber;
-    file.ignore(); // å¿½ç•¥æ¢è¡Œç¬¦
+    file.ignore(); // ºöÂÔ»»ĞĞ·û
     getline(file, roomName);
     file >> airConditioners;
     file >> capacity;
     file >> isOccupied;
 }
-// å®šä¹‰å½•è¯¾æ•™å®¤ç±»
+// ¶¨ÒåÂ¼¿Î½ÌÊÒÀà
 class RecordingRoom : public Room {
     int cameras;
     // other attributes
 public:
     // constructor, destructor, getters, setters, etc.
-    //å°†RecordingRoomç±»ä¿¡æ¯åŠ è½½è¿›ç•Œé¢
+    //½«RecordingRoomÀàĞÅÏ¢¼ÓÔØ½ø½çÃæ
     void display() override; // override the pure virtual function
-    friend ostream& operator<<(ostream& os, const RecordingRoom& room);//â€œè¾“å‡ºæµâ€å°†RecordingRoomç±»ä¿¡æ¯è¾“å‡ºåˆ°ç•Œé¢
-    friend istream& operator>>(istream& is, RecordingRoom& room);//â€œè¾“å…¥æµâ€å°†RecordingRoomç±»ä¿¡æ¯è¾“å‡ºåˆ°ç•Œé¢
-    void saveToFile(ofstream& file);//å°†RecordingRoomç±»ä¿¡æ¯å­˜å…¥æ–‡ä»¶
-    void loadFromFile(ifstream& file);
+    friend ostream& operator<<(ostream& os, const RecordingRoom& room);//¡°Êä³öÁ÷¡±½«RecordingRoomÀàĞÅÏ¢Êä³öµ½½çÃæ
+    friend istream& operator>>(istream& is, RecordingRoom& room);//¡°ÊäÈëÁ÷¡±½«RecordingRoomÀàĞÅÏ¢Êä³öµ½½çÃæ
+
 };
-// displayå‡½æ•°çš„ä¸»ä½“å®ç°
+// displayº¯ÊıµÄÖ÷ÌåÊµÏÖ
 void RecordingRoom::display() {
     cout << "Room Number: " << roomNumber << endl;
     cout << "Room Name: " << roomName << endl;
@@ -215,7 +216,7 @@ void RecordingRoom::display() {
     cout << "Capacity: " << capacity << endl;
     cout << "Occupied: " << (isOccupied ? "Yes" : "No") << endl;
 }
-// operator<<å‡½æ•°çš„ä¸»ä½“å®ç°
+// operator<<º¯ÊıµÄÖ÷ÌåÊµÏÖ
 ostream& operator<<(ostream& os, const RecordingRoom& room) {
     os << "Room Number: " << room.roomNumber << endl;
     os << "Room Name: " << room.roomName << endl;
@@ -224,7 +225,7 @@ ostream& operator<<(ostream& os, const RecordingRoom& room) {
     os << "Occupied: " << (room.isOccupied ? "Yes" : "No") << endl;
     return os;
 }
-// operator>>å‡½æ•°çš„ä¸»ä½“å®ç°
+// operator>>º¯ÊıµÄÖ÷ÌåÊµÏÖ
 istream& operator>>(istream& is, RecordingRoom& room) {
     cout << "Enter Room Number: ";
     is >> room.roomNumber;
@@ -238,67 +239,29 @@ istream& operator>>(istream& is, RecordingRoom& room) {
     is >> room.isOccupied;
     return is;
 }
-// saveToFileå‡½æ•°çš„ä¸»ä½“å®ç°
-void RecordingRoom::saveToFile(ofstream& file) {
-    file << roomNumber << endl;
-    file << roomName << endl;
-    file << cameras << endl;
-    file << capacity << endl;
-    file << isOccupied << endl;
-}
-// loadFromFileå‡½æ•°çš„ä¸»ä½“å®ç°
-void RecordingRoom::loadFromFile(ifstream& file) {
-    file >> roomNumber;
-    file >> roomName;
-    file >> cameras;
-    file >> capacity;
-    file >> isOccupied;
-}
-// æ£€æŸ¥æ—¶é—´å’Œæ•™å®¤å†²çª
+
+// ¼ì²éÊ±¼äºÍ½ÌÊÒ³åÍ»
 bool CheckConflict(int roomID, const std::string& bookingDate) {
-    // è¿æ¥æ•°æ®åº“ï¼ˆçœç•¥ï¼‰
-    // æ„é€ æŸ¥è¯¢è¯­å¥
+    // Á¬½ÓÊı¾İ¿â£¨Ê¡ÂÔ£©
+    // ¹¹Ôì²éÑ¯Óï¾ä
     std::string query = "SELECT * FROM BookingRecord WHERE RoomID = " + std::to_string(roomID) +
                         " AND BookingDate = '" + bookingDate + "'";
-    // æ‰§è¡ŒæŸ¥è¯¢
+    // Ö´ĞĞ²éÑ¯
     if (mysql_query(&mysql, query.c_str())) {
         std::cout << "Error querying bookings: " << mysql_error(&mysql) << std::endl;
-        return true; // æŸ¥è¯¢å‡ºé”™é»˜è®¤è¿”å›å†²çªï¼Œå®é™…åº”æ ¹æ®éœ€æ±‚å¤„ç†é”™è¯¯æƒ…å†µ
+        return true; // ²éÑ¯³ö´íÄ¬ÈÏ·µ»Ø³åÍ»£¬Êµ¼ÊÓ¦¸ù¾İĞèÇó´¦Àí´íÎóÇé¿ö
     }
-    // è·å–ç»“æœé›†
+    // »ñÈ¡½á¹û¼¯
     MYSQL_RES *result = mysql_store_result(&mysql);
     if (!result) {
         std::cout << "Error retrieving result: " << mysql_error(&mysql) << std::endl;
-        return true; // è·å–ç»“æœé›†å¤±è´¥é»˜è®¤è¿”å›å†²çªï¼Œå®é™…åº”æ ¹æ®éœ€æ±‚å¤„ç†é”™è¯¯æƒ…å†µ
+        return true; // »ñÈ¡½á¹û¼¯Ê§°ÜÄ¬ÈÏ·µ»Ø³åÍ»£¬Êµ¼ÊÓ¦¸ù¾İĞèÇó´¦Àí´íÎóÇé¿ö
     }
-    // å¦‚æœæœ‰è®°å½•ï¼Œè¡¨ç¤ºå†²çª
+    // Èç¹ûÓĞ¼ÇÂ¼£¬±íÊ¾³åÍ»
     bool conflict = (mysql_num_rows(result) > 0);
-    // é‡Šæ”¾ç»“æœé›†
+    // ÊÍ·Å½á¹û¼¯
     mysql_free_result(result);
-    // å…³é—­æ•°æ®åº“è¿æ¥ï¼ˆçœç•¥ï¼‰
+    // ¹Ø±ÕÊı¾İ¿âÁ¬½Ó£¨Ê¡ÂÔ£©
     return conflict;
 }
-// ä¿®æ”¹é¢„å®šçš„æ•™å®¤å’Œæ—¶é—´
-
-void saveToFile(const string& filename, Lab lab, const NormalTeacher& teacher, const Reservation& reservation) {
-    ofstream outfile(filename);
-    if (!outfile.is_open()) {
-        cout << "æ— æ³•æ‰“å¼€æ–‡ä»¶ " << filename << " è¿›è¡Œå†™å…¥." << endl;
-        return;
-    }
-
-    try {
-        lab.saveToFile(outfile);
-        cout << "å®Œæˆlabä¿å­˜-->save" << endl;
-
-        teacher.saveToFile(outfile);
-        cout << "å®Œæˆteacherä¿å­˜-->save" << endl;
-
-        reservation.saveToFile(outfile);
-        cout << "å®Œæˆreservationä¿å­˜-->save" << endl;
-    } catch (const exception& e) {
-        cout << "Error: " << e.what() << endl;
-    }
-
-    outfile.close();
-}
+// ĞŞ¸ÄÔ¤¶¨µÄ½ÌÊÒºÍÊ±¼ä
