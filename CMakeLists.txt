@@ -2,7 +2,11 @@ cmake_minimum_required(VERSION 3.28)
 project(untitled1)
 
 set(CMAKE_CXX_STANDARD 17)
-include_directories(D:\\MySQL\\install\\include)  #includeÎÄ¼ş¼ĞÎ»ÖÃ
-link_directories(D:\\MySQL\\install\\lib) #libÎÄ¼ş¼ĞÎ»ÖÃ
-link_libraries(libmysql)  #libÏÂdllÎÄ¼şÃû
-add_executable(untitled1 main.cpp)
+include_directories(D:\\MySQL\\install\\include)  #includeï¿½Ä¼ï¿½ï¿½ï¿½Î»ï¿½ï¿½
+link_directories(D:\\MySQL\\install\\lib) #libï¿½Ä¼ï¿½ï¿½ï¿½Î»ï¿½ï¿½
+link_libraries(libmysql)  #libï¿½ï¿½dllï¿½Ä¼ï¿½ï¿½ï¿½
+add_executable(untitled1 main.cpp
+        Room.h
+        Teacher.h
+        "../CLion 2023.1.5/bin/mingw/lib/gcc/x86_64-w64-mingw32/13.1.0/include-fixed/NewSQL.h"
+        Reservation.h)
