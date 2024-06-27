@@ -176,7 +176,6 @@ char* pass() {
     }
     return password;
 }
-
 // 定义主函数
 int main(){
 
