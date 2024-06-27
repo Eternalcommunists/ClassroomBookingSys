@@ -90,7 +90,7 @@ public:
     void getDateFromTeacher(string &bookingDate);
     bool isDateAvailable(int roomID, const string &bookingDate);
     bool BookRoom(int roomID, const string &bookingDate);
-
+    void teacher_register();
     void Loginshow();
 };
 class NormalTeacher : public Teacher {
@@ -103,7 +103,7 @@ public:
     friend ostream& operator<<(ostream& os, const NormalTeacher& teacher);
     friend istream& operator>>(istream& is, NormalTeacher& teacher);
 
-    void teacher_register();
+
 };
 // display函数的实现
 void NormalTeacher::display() const {
@@ -114,10 +114,9 @@ void NormalTeacher::display() const {
     cout << "Office Name: " << OfficeName << endl;
 }
 
-std::string getInput(const std::string& prompt) {
+std::string getInput() {
     std::string input;
-    std::cout << prompt;
-    std::getline(std::cin, input);
+    cin>>input;
     return input;
 }
 // 获取密码的辅助函数
@@ -165,31 +164,66 @@ istream& operator>>(istream& is, NormalTeacher& teacher) {
     getline(is, teacher.OfficeName);
     return is;
 }
-// 注册教师函数的实现
-void NormalTeacher::teacher_register() {
-    // 获取用户输入的详细信息
-    int teacherNumber = std::stoi(getInput("Enter Teacher Number: "));
-    std::string teacherName = getInput("Enter Teacher Name: ");
-    int permissionLevel = std::stoi(getInput("Enter Permission Level (e.g., 1 for Normal Teacher): "));
-    std::string phoneNumber = getInput("Enter Phone Number: ");
-    std::string officeName = getInput("Enter Office Name: ");
-    std::string password = getPassword();
+int numbergetInput() {
+    std::string input;
+    int value;
+    cout<<endl;
+    std::cout << "请输入一个整数: ";
+    cin>>input;
 
+    // 检查输入是否为空
+    if (input.empty()) {
+        std::cout << "未输入任何内容，请重新输入。\n";
+        return -1;
+    }
+
+    std::stringstream ss(input);
+    if (!(ss >> value)) {
+        std::cout << "输入无效，请输入一个整数。\n";
+        return -1;
+    }
+
+    return value;
+}
+
+/**编辑时间:24-6-27 下午3:21
+*创建人：吴培浩
+*/
+// 注册教师函数的实现
+void Teacher::teacher_register() {
+    // 获取用户输入的详细信息
+    std::cout << "Enter Teacher Number: ";
+    setTeacherNumber(numbergetInput());
+
+    std::cout << "Enter Teacher Name: ";
+    setTeacherName(getInput());
+
+    std::cout << "Enter Permission Level (e.g., 1 for Normal Teacher): ";
+    setPermissionLevel (numbergetInput());
+
+    std::cout << "Enter Phone Number: ";
+    setPhoneNumber(getInput());
+
+    std::cout << "Enter Office Name: ";
+    setOfficeName( getInput());
+
+    std::cout << "Enter Password: ";
+    setpassword(getInput());
     // 连接数据库
     mysql_init(&mysql);
     if (!mysql_real_connect(&mysql, "localhost", "root", "admin", "school", 3306, NULL, 0)) {
         std::cout << "Error connecting to database: " << mysql_error(&mysql) << std::endl;
-        return;
+      return;
     }
 
     // 构造插入 SQL 语句
     std::string query = "INSERT INTO Teacher (TeacherNumber, TeacherName, PermissionLevel, PhoneNumber, OfficeName, Password) VALUES ("
-                        + std::to_string(teacherNumber) + ", '"
-                        + teacherName + "', "
-                        + std::to_string(permissionLevel) + ", '"
-                        + phoneNumber + "', '"
-                        + officeName + "', '"
-                        + password + "')";
+                        + std::to_string(getTeacherNumber()) + ", '"
+                        + getTeacherName() + "', "
+                        + std::to_string(getPermissionLevel()) + ", '"
+                        + getPhoneNumber() + "', '"
+                        + getOfficeName() + "', '"
+                        + getPassword() + "')";
 
     // 执行 SQL 语句
     if (mysql_query(&mysql, query.c_str())) {
@@ -228,6 +262,14 @@ public:
     bool GetBookingDetails(int bookingID, int &roomID, string &bookingDate);
 
     bool CancelBooking(int bookingID);
+
+    void OptionChoice();
+
+    bool admin_login();
+
+    bool CheckLogin_forAdmin(int teacherNumber, const string &password);
+
+    void CheckAllBookings();
 };
 // display函数的实现
 void Admin::display() const {
@@ -267,6 +309,14 @@ istream& operator>>(istream& is, Admin& admin) {
 
 void Admin::admin_enter() {
 
+    bool siginal =admin_login();
+    if(siginal==true)
+    {
+        cout<<"登陆成功~~~~~~~~~~~~~~"<<endl;
+        OptionChoice();
+    }else{
+        cout<<"登陆失败，再试试吧！"<<endl;
+    }
 }
 /**编辑时间:24-6-26 上午1:23
 *创建人：吴培浩
@@ -284,8 +334,8 @@ bool CheckLogin(int teacherNumber, const std::string& password) {
 
     // 创建预处理语句句柄
     MYSQL_STMT* stmt = mysql_stmt_init(mysql);
-    // SQL 查询语句，使用 ? 占位符代替实际参数
-    const char* query = "SELECT * FROM teacher WHERE TeacherNumber=? AND Password=?";
+    // SQL 查询语句，使用 ? 占位符代替实际参数AND PermissionLevel=2
+    const char* query = "SELECT * FROM teacher WHERE TeacherNumber=? AND Password=? ";
 
     // 准备 SQL 语句
     if (mysql_stmt_prepare(stmt, query, strlen(query))) {
@@ -419,9 +469,48 @@ bool Teacher:: teacher_enter(){
     }
     return 0;
 }
+
 /**编辑时间:24-6-26 上午1:36
                 *创建人：吴培浩
                 */
+
+bool Admin::admin_login() {
+    string str;
+    int cnt = 0;
+    int max_attempts = 3; // 最大尝试次数
+    int user_num = 3; // 用户名和密码的配对数目，这个需要根据具体的用户列表进行调整
+
+    while (cnt < max_attempts) {
+        cout << "请输入管理员工号：";
+        cin >> TeacherNumber;
+        cout << "请输入密码：";
+        str = getPassword(); // 获取密码
+        setpassword(str); // 设置密码，通常用于隐藏或加密处理
+
+        bool identifier = CheckLogin_forAdmin(TeacherNumber, str); // 检查管理员登录
+
+        if (identifier) {
+            cout << "*******" << endl;
+            cout << "管理员登录成功！" << endl;
+            cout << "*******" << endl;
+            // 可以在这里添加管理员操作的功能调用或界面跳转
+             // 示例中调用管理员操作函数
+            return true;
+        } else {
+            cnt++;
+            cout << "用户名或密码错误，请重新输入。";
+            cout << "你还有 " << max_attempts - cnt << " 次机会" << endl;
+        }
+    }
+
+    if (cnt == max_attempts) {
+        cout << "错误次数已达上限，系统关闭！" << endl;
+        return false;
+    }
+
+    return false;
+}
+
 void Teacher::ViewBookings() {
     // 初始化 MySQL 对象
     MYSQL* mysql = mysql_init(NULL);
@@ -522,24 +611,39 @@ void Teacher::ViewAvailableRooms() {
     mysql_free_result(res);
     mysql_close(mysql);
 }
-
-// 查看所有预定信息
+/**编辑时间:24-6-27 下午6:15
+*创建人：吴培浩
+*/
+//Admin::ViewAllBookings()完成对于预定教师清单的查看
+//
 void Admin::ViewAllBookings() {
-    // 连接数据库（省略）
-
+    // 初始化 MySQL 对象
+    MYSQL* mysql = mysql_init(NULL);
+    if (!mysql) {
+        std::cerr << "MySQL initialization failed!" << std::endl;
+        return;
+    }
+    // 连接到 MySQL 数据库
+    if (!mysql_real_connect(mysql, "localhost", "root", "admin", "school", 3306, NULL, 0)) {
+        std::cerr << "Error connecting to database: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql); // 关闭连接，防止资源泄露
+        return;
+    }
     // 构造查询语句
     std::string query = "SELECT * FROM BookingRecord";
 
     // 执行查询
-    if (mysql_query(&mysql, query.c_str())) {
-        std::cout << "Error querying bookings: " << mysql_error(&mysql) << std::endl;
+    if (mysql_query(mysql, query.c_str())) {
+        std::cerr << "Error querying bookings: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql); // 关闭连接，防止资源泄露
         return;
     }
 
     // 获取结果集
-    MYSQL_RES *result = mysql_store_result(&mysql);
+    MYSQL_RES *result = mysql_store_result(mysql);
     if (!result) {
-        std::cout << "Error retrieving result: " << mysql_error(&mysql) << std::endl;
+        std::cerr << "Error retrieving result: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql); // 关闭连接，防止资源泄露
         return;
     }
 
@@ -555,7 +659,7 @@ void Admin::ViewAllBookings() {
     // 输出每行数据
     while ((row = mysql_fetch_row(result))) {
         for (int i = 0; i < num_fields; i++) {
-            std::cout << row[i] << '\t';
+            std::cout << (row[i] ? row[i] : "NULL") << '\t'; // 处理空值
         }
         std::cout << std::endl;
     }
@@ -563,8 +667,10 @@ void Admin::ViewAllBookings() {
     // 释放结果集
     mysql_free_result(result);
 
-    // 关闭数据库连接（省略）
+    // 关闭数据库连接
+    mysql_close(mysql);
 }
+
 /**编辑时间:24-6-26 上午2:02
 *创建人：吴培浩
 */
@@ -595,33 +701,97 @@ void Admin::ViewAllBookings() {
 */
 // 实现检查冲突的函数
 bool Admin::CheckConflict(int roomID, const std::string& bookingDate) {
-    // 1. 构造查询语句
-    std::string query = "SELECT COUNT(*) FROM BookingRecord "
-                        "WHERE RoomID = " + std::to_string(roomID) +
-                        " AND BookingDate = '" + bookingDate + "'"
-                                                               " AND IsApproved = true";
-
-    // 2. 执行查询
-    if (mysql_query(&mysql, query.c_str())) {
-        std::cout << "Error checking conflict: " << mysql_error(&mysql) << std::endl;
-        return true;
+    // 初始化 MySQL 对象
+    MYSQL* mysql = mysql_init(nullptr);
+    if (!mysql) {
+        std::cerr << "MySQL 初始化失败！" << std::endl;
+        return true; // 返回冲突，实际应根据需求处理错误情况
     }
 
-    // 3. 获取结果集
-    MYSQL_RES *result = mysql_store_result(&mysql);
-    if (!result) {
-        std::cout << "Error retrieving result: " << mysql_error(&mysql) << std::endl;
-        return true;
+    // 连接到 MySQL 数据库
+    if (!mysql_real_connect(mysql, "localhost", "root", "admin", "school", 3306, nullptr, 0)) {
+        std::cerr << "数据库连接失败: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql);
+        return true; // 返回冲突，实际应根据需求处理错误情况
     }
 
-    // 4. 获取行数据
-    MYSQL_ROW row = mysql_fetch_row(result);
-    int conflictCount = std::stoi(row[0]);
+    // 构造查询语句
+    const char* query = "SELECT COUNT(*) FROM BookingRecord WHERE RoomID = ? AND BookingDate = ? AND IsApproved = true";
+    MYSQL_STMT* stmt = mysql_stmt_init(mysql);
+    if (!stmt) {
+        std::cerr << "Statement 初始化失败: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql);
+        return true; // 返回冲突，实际应根据需求处理错误情况
+    }
 
-    // 5. 释放结果集
-    mysql_free_result(result);
+    // 准备查询
+    if (mysql_stmt_prepare(stmt, query, strlen(query))) {
+        std::cerr << "Statement 准备失败: " << mysql_stmt_error(stmt) << std::endl;
+        mysql_stmt_close(stmt);
+        mysql_close(mysql);
+        return true; // 返回冲突，实际应根据需求处理错误情况
+    }
 
-    // 6. 返回是否有冲突
+    // 绑定参数
+    MYSQL_BIND bind[2];
+    memset(bind, 0, sizeof(bind));
+
+    bind[0].buffer_type = MYSQL_TYPE_LONG;
+    bind[0].buffer = (char*)&roomID;
+    bind[0].is_null = 0;
+    bind[0].length = nullptr;
+
+    bind[1].buffer_type = MYSQL_TYPE_STRING;
+    bind[1].buffer = (char*)bookingDate.c_str();
+    bind[1].buffer_length = bookingDate.length();
+    bind[1].is_null = 0;
+    bind[1].length = nullptr;
+
+    if (mysql_stmt_bind_param(stmt, bind)) {
+        std::cerr << "参数绑定失败: " << mysql_stmt_error(stmt) << std::endl;
+        mysql_stmt_close(stmt);
+        mysql_close(mysql);
+        return true; // 返回冲突，实际应根据需求处理错误情况
+    }
+
+    // 执行查询
+    if (mysql_stmt_execute(stmt)) {
+        std::cerr << "查询执行失败: " << mysql_stmt_error(stmt) << std::endl;
+        mysql_stmt_close(stmt);
+        mysql_close(mysql);
+        return true; // 返回冲突，实际应根据需求处理错误情况
+    }
+
+    // 绑定结果
+    int conflictCount;
+    MYSQL_BIND resultBind[1];
+    memset(resultBind, 0, sizeof(resultBind));
+
+    resultBind[0].buffer_type = MYSQL_TYPE_LONG;
+    resultBind[0].buffer = (char*)&conflictCount;
+    resultBind[0].is_null = 0;
+    resultBind[0].length = nullptr;
+
+    if (mysql_stmt_bind_result(stmt, resultBind)) {
+        std::cerr << "结果绑定失败: " << mysql_stmt_error(stmt) << std::endl;
+        mysql_stmt_close(stmt);
+        mysql_close(mysql);
+        return true; // 返回冲突，实际应根据需求处理错误情况
+    }
+
+    // 获取结果
+    if (mysql_stmt_fetch(stmt)) {
+        std::cerr << "结果获取失败: " << mysql_stmt_error(stmt) << std::endl;
+        mysql_stmt_close(stmt);
+        mysql_close(mysql);
+        return true; // 返回冲突，实际应根据需求处理错误情况
+    }
+
+    // 释放资源
+    mysql_stmt_close(stmt);
+    mysql_close(mysql);
+
+    // 判断是否存在冲突
     return conflictCount > 0;
 }
 
@@ -662,78 +832,159 @@ bool Admin::CancelBooking(int bookingID) {
         std::cout << "Error cancelling booking: " << mysql_error(&mysql) << std::endl;
         return false;
     }
-
     std::cout << "Booking with ID " << bookingID << " cancelled successfully." << std::endl;
     return true;
 }
-// 审批预定请求的函数，接受一个预定的唯一标识 bookingID 作为参数
+
+/**编辑时间:24-6-27 下午5:50
+*创建人：吴培浩
+*/
 bool Admin::ApproveBooking(int bookingID) {
-
-    // 1. 查询当前预订的房间和日期
-    // 构造 SQL 查询语句，查询给定 bookingID 对应的 RoomID 和 BookingDate
-    std::string query = "SELECT RoomID, BookingDate FROM BookingRecord WHERE BookingID = " + std::to_string(bookingID);
-
-    // 2. 执行查询
-    // 使用 mysql_query 执行 SQL 查询
-    if (mysql_query(&mysql, query.c_str())) {
-        // 如果查询失败，输出错误信息并返回 false
-        std::cout << "Error querying booking record: " << mysql_error(&mysql) << std::endl;
+    // 初始化 MySQL 对象
+    MYSQL* mysql = mysql_init(nullptr);
+    if (!mysql) {
+        std::cerr << "MySQL 初始化失败！" << std::endl;
         return false;
     }
 
-    // 3. 获取结果集
-    // mysql_store_result 用于获取查询的结果集
-    MYSQL_RES *result = mysql_store_result(&mysql);
-    if (!result) {
-        // 如果获取结果集失败，输出错误信息并返回 false
-        std::cout << "Error retrieving result: " << mysql_error(&mysql) << std::endl;
+    // 连接到 MySQL 数据库
+    if (!mysql_real_connect(mysql, "localhost", "root", "admin", "school", 3306, nullptr, 0)) {
+        std::cerr << "数据库连接失败: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql);
         return false;
     }
 
-    // 4. 检查是否有结果
-    // 使用 mysql_num_rows 检查结果集中是否有记录
-    if (mysql_num_rows(result) == 0) {
-        // 如果结果集为空，说明没有找到对应的预订，输出信息并释放结果集，然后返回 false
-        std::cout << "No booking found with ID " << bookingID << std::endl;
-        mysql_free_result(result);
+    // 准备查询 RoomID 和 BookingDate 的预处理语句
+    const char* query_select = "SELECT RoomID, BookingDate FROM BookingRecord WHERE BookingID = ?";
+    MYSQL_STMT* stmt_select = mysql_stmt_init(mysql);
+    if (!stmt_select) {
+        std::cerr << "Statement initialization failed: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql);
         return false;
     }
 
-    // 5. 获取 RoomID 和 BookingDate
-    // 使用 mysql_fetch_row 从结果集中获取一行数据
-    MYSQL_ROW row = mysql_fetch_row(result);
-    int roomID = std::stoi(row[0]); // 将第一列（RoomID）转换为整数
-    std::string bookingDate = row[1]; // 获取第二列（BookingDate）的字符串
+    if (mysql_stmt_prepare(stmt_select, query_select, strlen(query_select))) {
+        std::cerr << "Statement preparation failed: " << mysql_stmt_error(stmt_select) << std::endl;
+        mysql_stmt_close(stmt_select);
+        mysql_close(mysql);
+        return false;
+    }
 
-    // 6. 释放结果集
-    // 释放查询结果集的内存
-    mysql_free_result(result);
+    // 绑定参数
+    MYSQL_BIND bind[1];
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONG;
+    bind[0].buffer = &bookingID;
+    if (mysql_stmt_bind_param(stmt_select, bind)) {
+        std::cerr << "Parameter binding failed: " << mysql_stmt_error(stmt_select) << std::endl;
+        mysql_stmt_close(stmt_select);
+        mysql_close(mysql);
+        return false;
+    }
 
-    // 7. 检查是否存在时间和教室冲突
-    // 调用 CheckConflict 函数检查预订是否与现有的安排冲突
+    // 执行查询
+    if (mysql_stmt_execute(stmt_select)) {
+        std::cerr << "Statement execution failed: " << mysql_stmt_error(stmt_select) << std::endl;
+        mysql_stmt_close(stmt_select);
+        mysql_close(mysql);
+        return false;
+    }
+
+    // 绑定结果
+    int roomID;
+    char bookingDate[11]; // 假设日期格式为 YYYY-MM-DD
+    MYSQL_BIND result_bind[2];
+    memset(result_bind, 0, sizeof(result_bind));
+    result_bind[0].buffer_type = MYSQL_TYPE_LONG;
+    result_bind[0].buffer = &roomID;
+    result_bind[1].buffer_type = MYSQL_TYPE_STRING;
+    result_bind[1].buffer = bookingDate;
+    result_bind[1].buffer_length = sizeof(bookingDate);
+
+    if (mysql_stmt_bind_result(stmt_select, result_bind)) {
+        std::cerr << "Result binding failed: " << mysql_stmt_error(stmt_select) << std::endl;
+        mysql_stmt_close(stmt_select);
+        mysql_close(mysql);
+        return false;
+    }
+
+    // 存储结果
+    if (mysql_stmt_store_result(stmt_select)) {
+        std::cerr << "Failed to store result: " << mysql_stmt_error(stmt_select) << std::endl;
+        mysql_stmt_close(stmt_select);
+        mysql_close(mysql);
+        return false;
+    }
+
+    // 检查是否有结果
+    if (mysql_stmt_num_rows(stmt_select) == 0) {
+        std::cerr << "No booking found with ID " << bookingID << std::endl;
+        mysql_stmt_close(stmt_select);
+        mysql_close(mysql);
+        return false;
+    }
+
+    // 获取结果
+    if (mysql_stmt_fetch(stmt_select)) {
+        std::cerr << "Failed to fetch result: " << mysql_stmt_error(stmt_select) << std::endl;
+        mysql_stmt_close(stmt_select);
+        mysql_close(mysql);
+        return false;
+    }
+
+    // 释放查询语句
+    mysql_stmt_close(stmt_select);
+
+    // 检查是否存在时间和教室冲突
     if (CheckConflict(roomID, bookingDate)) {
-        // 如果有冲突，输出冲突信息并返回 false
         std::cout << "Booking conflicts with existing schedule. Please choose another room or time." << std::endl;
+        mysql_close(mysql);
         return false;
     }
 
-    // 8. 构造更新语句，批准预订
-    // 更新 BookingRecord 表，设置 IsApproved 为 true 表示批准预订
-    query = "UPDATE BookingRecord SET IsApproved = true WHERE BookingID = " + std::to_string(bookingID);
-
-    // 9. 执行更新
-    // 使用 mysql_query 执行 SQL 更新语句
-    if (mysql_query(&mysql, query.c_str())) {
-        // 如果更新失败，输出错误信息并返回 false
-        std::cout << "Error approving booking: " << mysql_error(&mysql) << std::endl;
+    // 准备更新语句，批准预订
+    const char* query_update = "UPDATE BookingRecord SET IsApproved = true WHERE BookingID = ?";
+    MYSQL_STMT* stmt_update = mysql_stmt_init(mysql);
+    if (!stmt_update) {
+        std::cerr << "Statement initialization failed: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql);
         return false;
     }
 
-    // 10. 输出成功信息并返回 true
-    // 如果更新成功，输出成功信息并返回 true
+    if (mysql_stmt_prepare(stmt_update, query_update, strlen(query_update))) {
+        std::cerr << "Statement preparation failed: " << mysql_stmt_error(stmt_update) << std::endl;
+        mysql_stmt_close(stmt_update);
+        mysql_close(mysql);
+        return false;
+    }
+
+    memset(bind, 0, sizeof(bind));
+    bind[0].buffer_type = MYSQL_TYPE_LONG;
+    bind[0].buffer = &bookingID;
+    if (mysql_stmt_bind_param(stmt_update, bind)) {
+        std::cerr << "Parameter binding failed: " << mysql_stmt_error(stmt_update) << std::endl;
+        mysql_stmt_close(stmt_update);
+        mysql_close(mysql);
+        return false;
+    }
+
+    // 执行更新
+    if (mysql_stmt_execute(stmt_update)) {
+        std::cerr << "Error approving booking: " << mysql_stmt_error(stmt_update) << std::endl;
+        mysql_stmt_close(stmt_update);
+        mysql_close(mysql);
+        return false;
+    }
+
+    // 关闭更新语句和数据库连接
+    mysql_stmt_close(stmt_update);
+    mysql_close(mysql);
+
+    // 输出成功信息
     std::cout << "Booking with ID " << bookingID << " approved successfully." << std::endl;
     return true;
 }
+
 bool Teacher::ModifyBooking(int bookingID, int roomID, const std::string& bookingDate) {
     if (!isValidDate(bookingDate) || !isDateInRange(bookingDate)) {
         std::cerr << "日期格式无效或超出范围，请输入正确的日期 (YYYY-MM-DD)." << std::endl;
@@ -954,4 +1205,255 @@ void Teacher::OptionChoice(){
     } while (option != 4);
 
 
+}
+void Admin::OptionChoice(){
+
+    int option;
+    int BookingId, RoomId;
+    int judge = 1;
+    bool Isapproved=false;
+    string newtime,reason;
+    do {
+        //Loginshow();
+        cout << "请输入操作选项：" << endl;
+        cout << "1. 查询空余教室" << endl;
+        cout << "2. 增加注册教师" << endl;
+        cout << "3. 查看预定教室" << endl;
+        cout << "4. 审批预定教室" << endl;
+        cout << "5. 取消预定教室并给出理由" << endl;
+        cout << "6. 退出" << endl;
+        cin >> option;
+
+        switch (option) {
+            case 1:
+                ViewAvailableRooms();
+                // 插入是否预定，否的话退出函数；
+                break;
+            case 2:
+                teacher_register(); // 增加注册教师
+                break;
+            case 3:
+                ViewAllBookings(); // 查看预定教室
+                break;
+            case 4:
+                cout<<"输入审批教室编号"<<endl;
+                cin>>RoomId;
+                Isapproved=ApproveBooking(RoomId); // 审批预定教室
+                if(Isapproved==true)
+                {
+                    cout<<"完成审批！"<<endl;
+                }
+                break;
+            case 5:
+                cout << "请输入要取消预定的预定编号、房间号和取消理由：" << endl;
+                cin >> BookingId;
+                cin.ignore(); // 忽略换行符
+                cin>>RoomId;
+                getline(cin, reason); // 输入取消理由
+                CancelBooking(BookingId); // 取消预定教室并给出理由
+                break;
+            case 6:
+                cout << "欢迎下次使用！" << endl;
+                break;
+            default:
+                cout << "无效的选项，请输入有效的操作选项（1-6）。\n";
+                break;
+        }
+    } while (option != 6);
+}
+/**编辑时间:24-6-27 下午6:11
+*创建人：吴培浩
+ *
+完成了Admin::CheckLogin_forAdmin函数的修正，可以正常识别和开展管理员的行为了
+ */
+bool Admin::CheckLogin_forAdmin(int teacherNumber, const std::string& password) {
+    // 初始化 MySQL 连接句柄
+    MYSQL *mysql = mysql_init(NULL);
+    if (!mysql) {
+        std::cerr << "Failed to initialize MySQL connection." << std::endl;
+        return false;
+    }
+
+    // 尝试连接到 MySQL 数据库
+    if (!mysql_real_connect(mysql, "localhost", "root", "admin", "school", 3306, NULL, 0)) {
+        // 如果连接失败，打印错误信息并关闭 MySQL 连接
+        std::cerr << "Connection error: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql);
+        return false;
+    }
+
+    // 创建预处理语句句柄
+    MYSQL_STMT *stmt = mysql_stmt_init(mysql);
+    if (!stmt) {
+        std::cerr << "Failed to initialize MySQL statement." << std::endl;
+        mysql_close(mysql);
+        return false;
+    }
+
+    // SQL 查询语句，使用 ? 占位符代替实际参数
+    const char *query = "SELECT * FROM teacher WHERE TeacherNumber=? AND Password=? AND PermissionLevel=2";
+
+    // 准备 SQL 语句
+    if (mysql_stmt_prepare(stmt, query, strlen(query))) {
+        // 如果准备失败，打印错误信息并关闭语句句柄和 MySQL 连接
+        std::cerr << "Statement preparation error: " << mysql_stmt_error(stmt) << std::endl;
+        mysql_stmt_close(stmt);
+        mysql_close(mysql);
+        return false;
+    }
+
+    // 定义绑定参数数组，两个参数：TeacherNumber 和 Password
+    MYSQL_BIND bind[2];
+    memset(bind, 0, sizeof(bind));  // 初始化绑定参数数组
+
+    // 绑定 TeacherNumber 参数
+    bind[0].buffer_type = MYSQL_TYPE_LONG;  // 参数类型为整数
+    bind[0].buffer = (char *) &teacherNumber; // 指向 TeacherNumber 的指针
+    bind[0].is_null = 0;                    // 不为空
+
+    // 存储密码的缓冲区
+    char passwordBuffer[100]; // 假设密码最长不超过 100 字符
+    strncpy(passwordBuffer, password.c_str(), sizeof(passwordBuffer));
+    bind[1].buffer_type = MYSQL_TYPE_STRING;     // 参数类型为字符串
+    bind[1].buffer = passwordBuffer;             // 指向密码缓冲区
+    bind[1].buffer_length = strlen(passwordBuffer); // 设置字符串长度
+    bind[1].is_null = 0;                         // 不为空
+
+    // 绑定参数到预处理语句
+    if (mysql_stmt_bind_param(stmt, bind)) {
+        // 如果绑定失败，打印错误信息并关闭语句句柄和 MySQL 连接
+        std::cerr << "Parameter binding error: " << mysql_stmt_error(stmt) << std::endl;
+        mysql_stmt_close(stmt);
+        mysql_close(mysql);
+        return false;
+    }
+
+    // 执行查询
+    if (mysql_stmt_execute(stmt)) {
+        // 如果执行失败，打印错误信息并关闭语句句柄和 MySQL 连接
+        std::cerr << "Statement execution error: " << mysql_stmt_error(stmt) << std::endl;
+        mysql_stmt_close(stmt);
+        mysql_close(mysql);
+        return false;
+    }
+
+    // 获取查询结果集
+    MYSQL_RES *result_metadata = mysql_stmt_result_metadata(stmt);
+    if (!result_metadata) {
+        // 如果无法获取结果集元数据，打印错误信息并关闭语句句柄和 MySQL 连接
+        std::cerr << "Failed to retrieve result set meta information." << std::endl;
+        mysql_stmt_close(stmt);
+        mysql_close(mysql);
+        return false;
+    }
+
+    // 获取列信息
+    unsigned int column_count = mysql_num_fields(result_metadata);
+    MYSQL_BIND result_bind[column_count];
+    memset(result_bind, 0, sizeof(result_bind));
+
+    // 用于存储结果的缓冲区
+    char data[column_count][100]; // 假设每列最多 100 字符
+    unsigned long data_length[column_count];
+
+    // 绑定结果缓冲区
+    for (unsigned int i = 0; i < column_count; ++i) {
+        result_bind[i].buffer_type = MYSQL_TYPE_STRING;
+        result_bind[i].buffer = data[i];
+        result_bind[i].buffer_length = sizeof(data[i]);
+        result_bind[i].length = &data_length[i];
+    }
+
+    // 绑定结果到语句
+    if (mysql_stmt_bind_result(stmt, result_bind)) {
+        std::cerr << "Result binding error: " << mysql_stmt_error(stmt) << std::endl;
+        mysql_stmt_close(stmt);
+        mysql_close(mysql);
+        return false;
+    }
+
+    // 存储结果集
+    if (mysql_stmt_store_result(stmt)) {
+        std::cerr << "Result storing error: " << mysql_stmt_error(stmt) << std::endl;
+        mysql_stmt_close(stmt);
+        mysql_close(mysql);
+        return false;
+    }
+
+    // 检查查询结果
+    bool loggedIn = false;
+    if (mysql_stmt_fetch(stmt) == 0) { // 0 表示成功获取到一行
+        loggedIn = true;
+        std::cout << "Login successful. Retrieved data:" << std::endl;
+        for (unsigned int i = 0; i < column_count; ++i) {
+            std::cout << "Column " << i << ": " << data[i] << ", Length: " << data_length[i] << std::endl;
+        }
+    } else {
+        std::cout << "Login failed. No matching records found." << std::endl;
+    }
+
+    // 释放结果集元数据
+    mysql_free_result(result_metadata);
+
+    // 关闭语句句柄
+    mysql_stmt_close(stmt);
+    // 关闭 MySQL 连接
+    mysql_close(mysql);
+
+    return loggedIn;
+}
+
+/**编辑时间:24-6-27 下午5:33
+*创建人：吴培浩
+*/
+void Admin::CheckAllBookings() {
+    // 初始化 MySQL 对象
+    MYSQL* mysql = mysql_init(NULL);
+    if (!mysql) {
+        std::cerr << "MySQL initialization failed!" << std::endl;
+        return;
+    }
+
+    // 连接到 MySQL 数据库
+    if (!mysql_real_connect(mysql, "localhost", "root", "admin", "school", 3306, NULL, 0)) {
+        std::cerr << "Error connecting to database: " << mysql_error(mysql) << std::endl;
+        return;
+    }
+
+    // SQL 查询语句：查找所有教师的预定记录
+    std::string query = "SELECT b.BookingID, b.SubmissionTime, c.RoomNumber, c.RoomName, b.BookingDate, b.IsApproved, t.TeacherName "
+                        "FROM BookingRecord b "
+                        "JOIN Classroom c ON b.RoomID = c.RoomID "
+                        "JOIN Teacher t ON b.TeacherID = t.TeacherID";
+
+    // 执行 SQL 查询
+    if (mysql_query(mysql, query.c_str())) {
+        std::cerr << "Query error: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql);
+        return;
+    }
+
+    // 获取查询结果集
+    MYSQL_RES* res = mysql_store_result(mysql);
+    if (!res) {
+        std::cerr << "Result error: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql);
+        return;
+    }
+
+    // 遍历结果集并打印每一行数据
+    MYSQL_ROW row;
+    while ((row = mysql_fetch_row(res))) {
+        std::cout << "Booking ID: " << row[0]
+                  << ", Submission Time: " << row[1]
+                  << ", Room Number: " << row[2]
+                  << ", Room Name: " << row[3]
+                  << ", Booking Date: " << row[4]
+                  << ", Approved: " << (std::stoi(row[5]) ? "Yes" : "No")
+                  << ", Teacher Name: " << row[6] << std::endl;
+    }
+
+    // 释放结果集并关闭数据库连接
+    mysql_free_result(res);
+    mysql_close(mysql);
 }
