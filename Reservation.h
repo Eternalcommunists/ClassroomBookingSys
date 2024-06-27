@@ -11,7 +11,6 @@ using namespace std;
 
 #ifndef UNTITLED1_RESERVATION_H
 #define UNTITLED1_RESERVATION_H
-
 #endif //UNTITLED1_RESERVATION_H
 class Reservation {
     int reservationNumber;

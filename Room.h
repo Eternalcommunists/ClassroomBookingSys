@@ -29,8 +29,6 @@ protected:
 public:
     // constructor, destructor, getters, setters, etc.
     virtual void display() = 0; // pure virtual function
-    friend ostream& operator<<(ostream& os, const Room& room);//“输出流”将room类信息输出到界面
-    friend istream& operator>>(istream& is, Room& room);//“输入流”将信息输入到room类里
     void saveToFile(ofstream& file);//将room信息存入文件
     void loadFromFile(ifstream& file);//将room信息加载进界面
 };
@@ -41,15 +39,6 @@ void Room::display() {
     //cout << "Room Type: " << roomType<< endl;
     cout << "Room capacity: " << capacity << endl;
     cout << "Is Occupied: " << (isOccupied ? "Yes" : "No") << endl;
-}
-// operator<<函数的主体实现
-ostream& operator<<(ostream& os, const Room& room) {
-    os << "Room roomNumber: " << room.roomNumber << endl;
-    os<<"Room roomName: "<<room.roomName<<endl;
-    // os << "Room Type: " << room.roomType << endl;
-    os << "Room capacity: " << room.capacity << endl;
-    os << "Is Occupied: " << (room.isOccupied ? "Yes" : "No") << endl;
-    return os;
 }
 
 // saveToFile函数的主体实现
