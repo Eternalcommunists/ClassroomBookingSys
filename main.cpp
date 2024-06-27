@@ -88,6 +88,53 @@ bool QueryDatabase(string sql) {
     return true;
 }
 //输出结果
+void CleanUpOldBookings() {
+    // 初始化 MySQL 对象
+    MYSQL* mysql = mysql_init(nullptr);
+    if (!mysql) {
+        std::cerr << "MySQL 初始化失败！" << std::endl;
+        return;
+    }
+    // 连接到 MySQL 数据库
+    if (!mysql_real_connect(mysql, "localhost", "root", "admin", "school", 3306, nullptr, 0)) {
+        std::cerr << "数据库连接失败: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql); // 关闭连接，防止资源泄露
+        return;
+    }
+    // 设置 MySQL 连接的字符集为 UTF-8
+    if (mysql_set_character_set(mysql, "utf8")) {
+        std::cerr << "设置字符集失败: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql);
+        return;
+    }
+    // 获取当前日期
+    time_t t = time(nullptr);
+    tm* now = localtime(&t);
+    char current_date[11]; // 格式化日期字符串
+    snprintf(current_date, sizeof(current_date), "%04d-%02d-%02d", now->tm_year + 1900, now->tm_mon + 1, now->tm_mday);
+
+    // 构造删除语句
+    std::string query = "DELETE FROM BookingRecord WHERE BookingDate < '" + std::string(current_date) + "'";
+
+    // 执行查询
+    if (mysql_query(mysql, query.c_str())) {
+        std::cerr << "删除旧预订记录时出错: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql);
+        return;
+    }
+
+    // 检查是否有行被影响
+    unsigned long affected_rows = mysql_affected_rows(mysql);
+    if (affected_rows > 0) {
+        std::cout << "删除了 " << affected_rows << " 条过期的预定记录。" << std::endl;
+    } else {
+        std::cout << "没有找到需要删除的过期预定记录。" << std::endl;
+    }
+
+    // 关闭 MySQL 连接
+    mysql_close(mysql);
+}
+
 void outMysql() {
     //打印数据行数
     cout << "number of dataline returned: " << mysql_affected_rows(&mysql) << endl;
@@ -174,11 +221,12 @@ char* pass() {
         password[i++] = ch;
         putchar('*'); // 显示 * 代替输入字符
     }
+
     return password;
 }
 // 定义主函数
 int main(){
-
+    CleanUpOldBookings();
     show();
     return 0;
 
