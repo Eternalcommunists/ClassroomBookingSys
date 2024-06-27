@@ -137,6 +137,7 @@ public:
     void saveToFile(ofstream& file); // 将MultimediaRoom信息存入文件
     void loadFromFile(ifstream& file); // 将MultimediaRoom信息加载进界面
 };
+
 // 实现display函数
 void MultimediaRoom::display() {
     cout << "Room Number: " << roomNumber << endl;
@@ -169,22 +170,7 @@ istream& operator>>(istream& is, MultimediaRoom& room) {
     return is;
 }
 // 实现保存到文件函数
-void MultimediaRoom::saveToFile(ofstream& file) {
-    file << roomNumber << endl;
-    file << roomName << endl;
-    file << airConditioners << endl;
-    file << capacity << endl;
-    file << isOccupied << endl;
-}
-// 实现从文件加载函数
-void MultimediaRoom::loadFromFile(ifstream& file) {
-    file >> roomNumber;
-    file.ignore(); // 忽略换行符
-    getline(file, roomName);
-    file >> airConditioners;
-    file >> capacity;
-    file >> isOccupied;
-}
+
 // 定义录课教室类
 class RecordingRoom : public Room {
     int cameras;
@@ -205,6 +191,7 @@ void RecordingRoom::display() {
     cout << "Capacity: " << capacity << endl;
     cout << "Occupied: " << (isOccupied ? "Yes" : "No") << endl;
 }
+
 // operator<<函数的主体实现
 ostream& operator<<(ostream& os, const RecordingRoom& room) {
     os << "Room Number: " << room.roomNumber << endl;
@@ -230,27 +217,47 @@ istream& operator>>(istream& is, RecordingRoom& room) {
 }
 
 // 检查时间和教室冲突
+
+
 bool CheckConflict(int roomID, const std::string& bookingDate) {
-    // 连接数据库（省略）
+    MYSQL mysql;
+    mysql_init(&mysql);
+
+    if (!mysql_real_connect(&mysql, "localhost", "root", "admin", "school", 3306, nullptr, 0)) {
+        std::cerr << "数据库连接失败: " << mysql_error(&mysql) << std::endl;
+        mysql_close(&mysql);
+        return true; // 返回冲突，实际应根据需求处理错误情况
+    }
+
     // 构造查询语句
     std::string query = "SELECT * FROM BookingRecord WHERE RoomID = " + std::to_string(roomID) +
                         " AND BookingDate = '" + bookingDate + "'";
+
     // 执行查询
     if (mysql_query(&mysql, query.c_str())) {
-        std::cout << "Error querying bookings: " << mysql_error(&mysql) << std::endl;
-        return true; // 查询出错默认返回冲突，实际应根据需求处理错误情况
+        std::cerr << "查询失败: " << mysql_error(&mysql) << std::endl;
+        mysql_close(&mysql);
+        return true; // 返回冲突，实际应根据需求处理错误情况
     }
+
     // 获取结果集
     MYSQL_RES *result = mysql_store_result(&mysql);
     if (!result) {
-        std::cout << "Error retrieving result: " << mysql_error(&mysql) << std::endl;
-        return true; // 获取结果集失败默认返回冲突，实际应根据需求处理错误情况
+        std::cerr << "获取结果集失败: " << mysql_error(&mysql) << std::endl;
+        mysql_close(&mysql);
+        return true; // 返回冲突，实际应根据需求处理错误情况
     }
+
     // 如果有记录，表示冲突
     bool conflict = (mysql_num_rows(result) > 0);
+
     // 释放结果集
     mysql_free_result(result);
-    // 关闭数据库连接（省略）
+
+    // 关闭数据库连接
+    mysql_close(&mysql);
+
     return conflict;
 }
+
 // 修改预定的教室和时间

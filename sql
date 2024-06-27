@@ -347,3 +347,106 @@ ALTER DATABASE school CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci;
 ALTER TABLE Teacher CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 ALTER TABLE Classroom CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 ALTER TABLE BookingRecord CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+-- 实验室表
+CREATE TABLE Lab (
+    RoomID INT PRIMARY KEY,
+    LabType INT,
+    FOREIGN KEY (RoomID) REFERENCES Room(RoomID)
+);
+
+-- 多媒体室表
+CREATE TABLE MultimediaRoom (
+    RoomID INT PRIMARY KEY,
+    AirConditioners INT,
+    FOREIGN KEY (RoomID) REFERENCES Room(RoomID)
+);
+
+-- 录音室表
+CREATE TABLE RecordingRoom (
+    RoomID INT PRIMARY KEY,
+    Cameras INT,
+    FOREIGN KEY (RoomID) REFERENCES Room(RoomID)
+);
+ALTER TABLE Lab
+    ADD CONSTRAINT fk_lab_classroom
+        FOREIGN KEY (RoomID) REFERENCES classroom(RoomID);
+ALTER TABLE MultimediaRoom
+    ADD CONSTRAINT fk_multimedia_classroom
+        FOREIGN KEY (RoomID) REFERENCES classroom(RoomID);
+ALTER TABLE RecordingRoom
+    ADD CONSTRAINT fk_recording_classroom
+        FOREIGN KEY (RoomID) REFERENCES classroom(RoomID);
+ALTER TABLE bookingrecord
+    ADD CONSTRAINT fk_booking_classroom
+        FOREIGN KEY (RoomID) REFERENCES classroom(RoomID);
+use school;
+-- 创建实验室类型表
+CREATE TABLE IF NOT EXISTS LabType (
+                                       LabTypeID INT PRIMARY KEY,
+                                       LabTypeName VARCHAR(50)
+);
+
+-- 插入实验室类型
+INSERT INTO LabType (LabTypeID, LabTypeName)
+VALUES
+    (1, 'Chemistry'),       -- 化学
+    (2, 'Physics'),         -- 物理
+    (3, 'Biology'),         -- 生物
+    (4, 'ComputerScience'), -- 计算机
+    (5, 'Environmental');   -- 水环境
+
+-- 修改 Lab 表，增加 CHECK 约束来限制 LabType 的值
+ALTER TABLE Lab
+    ADD CONSTRAINT chk_lab_labtype
+        CHECK (LabType IN (1, 2, 3, 4, 5));
+
+-- 增加外键约束，确保 LabType 的值在 LabType 表中
+ALTER TABLE Lab
+    ADD CONSTRAINT fk_lab_labtype1
+        FOREIGN KEY (LabType) REFERENCES LabType(LabTypeID);
+
+-- 创建触发器来进一步控制数据的插入或更新
+DELIMITER $$
+
+CREATE TRIGGER trg_lab_before_insert
+    BEFORE INSERT ON Lab
+    FOR EACH ROW
+BEGIN
+    -- 如果 LabType 不在 1 到 5 之间，则抛出错误
+    IF NEW.LabType NOT BETWEEN 1 AND 5 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid LabType. Valid values are 1, 2, 3, 4, and 5.';
+    END IF;
+END$$
+
+CREATE TRIGGER trg_lab_before_update
+    BEFORE UPDATE ON Lab
+    FOR EACH ROW
+BEGIN
+    -- 如果 LabType 不在 1 到 5 之间，则抛出错误
+    IF NEW.LabType NOT BETWEEN 1 AND 5 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Invalid LabType. Valid values are 1, 2, 3, 4, and 5.';
+    END IF;
+END$$
+
+DELIMITER ;
+use school;
+ALTER TABLE classroom MODIFY COLUMN RoomNumber VARCHAR(50);
+-- 插入数据到 classroom 表
+INSERT INTO classroom (RoomID, RoomNumber, RoomName, Capacity, IsOccupied, RoomType) VALUES
+                                                                                         (401, 'A101', '普通教室 A101', 30, FALSE, 0),
+                                                                                         (402, 'B202', '化学实验室 B202', 25, FALSE, 1),
+                                                                                         (403, 'C303', '物理实验室 C303', 20, TRUE, 1),
+                                                                                         (404, 'D404', '多媒体教室 D404', 50, FALSE, 2),
+                                                                                         (405, 'E505', '录课教室 E505', 15, TRUE, 3);
+-- 插入数据到 classroom 表
+INSERT INTO lab (RoomID, RoomName, LabType) VALUES
+                                                (402, '化学实验室 B202', 1),  -- 化学实验室
+                                                (403, '物理实验室 C303', 2);  -- 物理实验室
+
+-- 插入数据到 multimediaroom 表
+INSERT INTO multimediaroom (RoomID, RoomName, AirConditioners) VALUES
+    (404, '多媒体教室 D404', 2);  -- 有空调
+
+-- 插入数据到 recordingroom 表
+INSERT INTO recordingroom (RoomID, RoomName, Cameras) VALUES
+    (405, '录课教室 E505', 3);  -- 3 个摄像头
