@@ -1,3 +1,33 @@
+CREATE TABLE Teacher (
+    TeacherID INT PRIMARY KEY AUTO_INCREMENT,
+    TeacherNumber INT NOT NULL UNIQUE,
+    TeacherName VARCHAR(100) NOT NULL,
+    PermissionLevel INT NOT NULL,
+    PhoneNumber VARCHAR(20),
+    OfficeName VARCHAR(100),
+    Password VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Classroom (
+    RoomID INT PRIMARY KEY AUTO_INCREMENT,
+    RoomNumber INT NOT NULL,
+    RoomName VARCHAR(100) NOT NULL,
+    Capacity INT NOT NULL,
+    IsOccupied BOOLEAN NOT NULL DEFAULT FALSE,
+    RoomType INT NOT NULL
+);
+CREATE TABLE BookingRecord (
+    BookingID INT PRIMARY KEY AUTO_INCREMENT,
+    SubmissionTime DATETIME NOT NULL,
+    RoomID INT NOT NULL,
+    TeacherID INT NOT NULL,
+    BookingDate DATE NOT NULL,
+    IsApproved BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (RoomID) REFERENCES Classroom(RoomID),
+    FOREIGN KEY (TeacherID) REFERENCES Teacher(TeacherID),
+    UNIQUE (RoomID, BookingDate) -- 保证同一日期不会有重复预定
+);
+
 INSERT INTO Room (RoomNumber, RoomName, Capacity, IsOccupied, RoomType)
 VALUES
 (2, '1102', 100, 0, 1),
@@ -271,3 +301,45 @@ VALUES
 (270, '4415', 100, 0, 1),
 (271, '4416', 100, 0, 1),
 (272, '4417', 100, 0, 1);
+INSERT INTO Teacher (TeacherNumber, TeacherName, PermissionLevel, PhoneNumber, OfficeName, Password) VALUES
+(1001, 'Alice Smith', 1, '1234567890', 'Office A', 'password1'),
+(1002, 'Bob Johnson', 2, '2345678901', 'Office B', 'password2'),
+(1003, 'Carol Williams', 1, '3456789012', 'Office C', 'password3'),
+(1004, 'David Brown', 1, '4567890123', 'Office D', 'password4'),
+(1005, 'Eve Davis', 2, '5678901234', 'Office E', 'password5'),
+(1006, 'Frank Wilson', 1, '6789012345', 'Office F', 'password6'),
+(1007, 'Grace Lee', 1, '7890123456', 'Office G', 'password7'),
+(1008, 'Henry Walker', 2, '8901234567', 'Office H', 'password8'),
+(1009, 'Ivy Hall', 1, '9012345678', 'Office I', 'password9'),
+(1010, 'Jack King', 1, '0123456789', 'Office J', 'password10'),
+(1011, 'Karen Scott', 2, '1231231231', 'Office K', 'password11'),
+(1012, 'Leo Green', 1, '2342342342', 'Office L', 'password12'),
+(1013, 'Mary Young', 1, '3453453453', 'Office M', 'password13'),
+(1014, 'Nina Adams', 1, '4564564564', 'Office N', 'password14'),
+(1015, 'Oscar Baker', 2, '5675675675', 'Office O', 'password15'),
+(1016, 'Paul Carter', 1, '6786786786', 'Office P', 'password16'),
+(1017, 'Quinn Evans', 1, '7897897897', 'Office Q', 'password17'),
+(1018, 'Rita Foster', 2, '8908908908', 'Office R', 'password18'),
+(1019, 'Steve Gray', 1, '9019019019', 'Office S', 'password19'),
+(1020, 'Tina Harris', 1, '0120120120', 'Office T', 'password20');
+INSERT INTO BookingRecord (SubmissionTime, RoomID, TeacherID, BookingDate, IsApproved) VALUES
+('2024-06-01 08:30:00', 1, 1, '2024-07-01', TRUE),
+('2024-06-02 09:00:00', 2, 2, '2024-07-02', FALSE),
+('2024-06-03 10:00:00', 3, 3, '2024-07-03', TRUE),
+('2024-06-04 11:30:00', 4, 4, '2024-07-04', FALSE),
+('2024-06-05 12:00:00', 5, 5, '2024-07-05', TRUE),
+('2024-06-06 13:30:00', 6, 6, '2024-07-06', FALSE),
+('2024-06-07 14:00:00', 7, 7, '2024-07-07', TRUE),
+('2024-06-08 15:00:00', 8, 8, '2024-07-08', FALSE),
+('2024-06-09 16:00:00', 9, 9, '2024-07-09', TRUE),
+('2024-06-10 17:00:00', 10, 10, '2024-07-10', FALSE),
+('2024-06-11 08:00:00', 11, 11, '2024-07-11', TRUE),
+('2024-06-12 09:30:00', 12, 12, '2024-07-12', FALSE),
+('2024-06-13 10:30:00', 13, 13, '2024-07-13', TRUE),
+('2024-06-14 11:00:00', 14, 14, '2024-07-14', FALSE),
+('2024-06-15 12:30:00', 15, 15, '2024-07-15', TRUE),
+('2024-06-16 13:00:00', 16, 16, '2024-07-16', FALSE),
+('2024-06-17 14:30:00', 17, 17, '2024-07-17', TRUE),
+('2024-06-18 15:30:00', 18, 18, '2024-07-18', FALSE),
+('2024-06-19 16:30:00', 19, 19, '2024-07-19', TRUE),
+('2024-06-20 17:30:00', 20, 20, '2024-07-20', FALSE);
