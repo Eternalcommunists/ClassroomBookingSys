@@ -46,18 +46,6 @@ sequenceDiagram
         SQL->>System:返回信息
         System->>U: 处理取消或修改预约请求
     end
-    alt 管理员登录
-        U->>System: 请求查看所有预约信息
-        System->>SQL:发出调用语句查询
-        SQL->>SQL:TERMINAL检查校验
-        SQL->>System:返回信息
-        System->>U: 返回所有预约信息
-        U->>System: 请求管理预约或教师信息
-        System->>SQL:发出调用语句查询
-        SQL->>SQL:TERMINAL检查校验
-        SQL->>System:返回信息
-        System->>U: 处理管理请求
-    end
     alt
     U->>System: 继续其他操作或退出系统
     System->>SQL:发出涉及调用sql库语句
@@ -66,7 +54,7 @@ sequenceDiagram
     System->>U: 响应操作或退出系统
     end
 ```
-
+管理员这部分长度不让放了，所以删去了，有兴趣自己画
 # 教室管理系统流程图
 
 ## 流程图
@@ -116,6 +104,6 @@ flowchart TD
     end
 
     %% 添加个人标记
-    subgraph watermark [© 1991433吴培浩 - Unauthorized copying is prohibited.]
+    subgraph watermark [© 2000 - Unauthorized copying is prohibited.]
     end
 ```
