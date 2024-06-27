@@ -343,3 +343,7 @@ INSERT INTO BookingRecord (SubmissionTime, RoomID, TeacherID, BookingDate, IsApp
 ('2024-06-18 15:30:00', 18, 18, '2024-07-18', FALSE),
 ('2024-06-19 16:30:00', 19, 19, '2024-07-19', TRUE),
 ('2024-06-20 17:30:00', 20, 20, '2024-07-20', FALSE);
+ALTER DATABASE school CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci;
+ALTER TABLE Teacher CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+ALTER TABLE Classroom CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+ALTER TABLE BookingRecord CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;

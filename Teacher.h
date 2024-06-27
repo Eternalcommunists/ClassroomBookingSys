@@ -825,14 +825,51 @@ bool Admin::GetBookingDetails(int bookingID, int &roomID, std::string &bookingDa
 }
 
 // 实现取消预定的函数
-bool Admin::CancelBooking(int bookingID) {
-    std::string query = "DELETE FROM BookingRecord WHERE BookingID = " + std::to_string(bookingID);
 
-    if (mysql_query(&mysql, query.c_str())) {
-        std::cout << "Error cancelling booking: " << mysql_error(&mysql) << std::endl;
+bool Admin::CancelBooking(int bookingID) {
+    // 初始化 MySQL 对象
+    MYSQL* mysql = mysql_init(nullptr);
+    if (!mysql) {
+        std::cerr << "MySQL 初始化失败！" << std::endl;
         return false;
     }
+
+    // 连接到 MySQL 数据库
+    if (!mysql_real_connect(mysql, "localhost", "root", "admin", "school", 3306, nullptr, 0)) {
+        std::cerr << "数据库连接失败: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql); // 关闭连接，防止资源泄露
+        return false;
+    }
+
+    // 设置 MySQL 连接的字符集为 UTF-8
+    if (mysql_set_character_set(mysql, "utf8")) {
+        std::cerr << "设置字符集失败: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql);
+        return false;
+    }
+
+    // 构造删除语句
+    std::string query = "DELETE FROM bookingrecord WHERE BookingID = " + std::to_string(bookingID);
+
+    // 执行查询
+    if (mysql_query(mysql, query.c_str())) {
+        std::cerr << "取消预订时出错: " << mysql_error(mysql) << std::endl;
+        mysql_close(mysql);
+        return false;
+    }
+
+    // 检查是否有行被影响
+    if (mysql_affected_rows(mysql) == 0) {
+        std::cerr << "未找到对应的 BookingID: " << bookingID << std::endl;
+        mysql_close(mysql);
+        return false;
+    }
+
     std::cout << "Booking with ID " << bookingID << " cancelled successfully." << std::endl;
+
+    // 关闭 MySQL 连接
+    mysql_close(mysql);
+
     return true;
 }
 
@@ -1010,7 +1047,7 @@ bool Teacher::ModifyBooking(int bookingID, int roomID, const std::string& bookin
     return true;
 }
 
-// 取消预定的函数
+ //取消预定的函数
 bool Teacher::CancelBooking(int bookingID) {
     // 构造删除语句
     std::string query = "DELETE FROM BookingRecord WHERE BookingID = " + std::to_string(bookingID);
@@ -1106,7 +1143,7 @@ void Teacher::Loginshow(){
     cout << endl;
     cout << "欢迎使用教室预约系统！" <<getTeacherName()<< endl;
     cout << "===============================================" << endl;
-    cout << "1.查询当前空余教室    2.查看您的预定   3.修改您的预定     4.退出系统" << endl;
+    cout << "1.查询当前空余教室    2.查看您的预定   3.修改您的预定     4.取消您的预定     5.退出系统" << endl;
 }
 // 函数：预订教室
 
@@ -1196,13 +1233,21 @@ void Teacher::OptionChoice(){
                 ModifyBooking(BookingId,RoomId, newtime);
                 break;
             case 4:
+                cout << "请输入要取消预定的预定编号" << endl;
+                cin >> BookingId;
+                if(CancelBooking(BookingId))
+                {
+                    cout<<"成功取消预定"<<endl;
+                }// 取消预定教室并给出理由
+                break;
+            case 5:
                 cout << "欢迎下次使用！" << endl;
                 break;
             default:
                 cout << "无效的选项，请输入有效的操作选项（1-4）。" << endl;
                 break;
         }
-    } while (option != 4);
+    } while (option != 5);
 
 
 }
@@ -1245,12 +1290,15 @@ void Admin::OptionChoice(){
                 }
                 break;
             case 5:
-                cout << "请输入要取消预定的预定编号、房间号和取消理由：" << endl;
+                cout << "请输入要取消预定的预定编号" << endl;
                 cin >> BookingId;
-                cin.ignore(); // 忽略换行符
-                cin>>RoomId;
+                //cin.ignore(); // 忽略换行符
+                //cin>>RoomId;
                 getline(cin, reason); // 输入取消理由
-                CancelBooking(BookingId); // 取消预定教室并给出理由
+                if(CancelBooking(BookingId))
+                {
+                    cout<<"成功取消预定"<<endl;
+                }// 取消预定教室并给出理由
                 break;
             case 6:
                 cout << "欢迎下次使用！" << endl;
